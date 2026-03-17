@@ -277,24 +277,72 @@ const DataEntry = () => {
       count: Number(formData.count),
       amount: Number(formData.amount),
       machineRemaining: formData.machineRemaining ? Number(formData.machineRemaining) : null,
-      machineAccumulated: formData.machineMixed ? Number(formData.machineMixed) : null
+      machineAccumulated: formData.machineMixed ? Number(formData.machineMixed) : null,
+      topUpAmount: formData.topUpAmount ? Number(formData.topUpAmount) : 0,
+      timestamp: Date.now()
     }]);
-    setFormData({ ...formData, count: '', amount: '', machineRemaining: '', machineMixed: '' });
+    setFormData({ ...formData, count: '', amount: '', machineRemaining: '', machineMixed: '', topUpAmount: '' });
   };
 
-  const previousAccumulated = useMemo(() => {
+  const machineContext = useMemo(() => {
+    // Find the chronologically latest record before (or same day but earlier timestamp) the current selection
+    // to determine the machine state context.
     const companyRecords = records.filter(r => r.companyId === selectedCompany && r.machineAccumulated != null);
-    const sorted = [...companyRecords].sort((a, b) => new Date(b.date) - new Date(a.date));
-    const latest = sorted.find(r => new Date(r.date) < new Date(selectedDay));
-    return latest ? latest.machineAccumulated : 0;
+    
+    // Sort all records by date and then by timestamp
+    const sorted = [...companyRecords].sort((a, b) => {
+      if (a.date !== b.date) return new Date(a.date) - new Date(b.date);
+      return (a.timestamp || 0) - (b.timestamp || 0);
+    });
+
+    // Find the last record that is before the selected day OR same day (if we want to chain entries)
+    // For a new entry, we look for the last one in the sorted list that isn't the current entry
+    const last = sorted.findLast(r => r.date <= selectedDay);
+    
+    return last ? { acc: last.machineAccumulated, rem: last.machineRemaining } : { acc: 0, rem: null };
   }, [records, selectedCompany, selectedDay]);
 
-  const isValidAccumulated = useMemo(() => {
-    if (!formData.machineMixed || !formData.amount) return true;
-    const currentAcc = Number(formData.machineMixed);
-    const diff = currentAcc - previousAccumulated;
-    return Math.abs(diff - Number(formData.amount)) < 0.01;
-  }, [formData.machineMixed, formData.amount, previousAccumulated]);
+  const topUpCalculation = useMemo(() => {
+    if (!formData.machineRemaining || machineContext.rem === null || !formData.amount) return 0;
+    const currentRem = Number(formData.machineRemaining);
+    const expectedRem = machineContext.rem - Number(formData.amount);
+    
+    if (currentRem > expectedRem) {
+      // Potentially a top-up
+      return currentRem - expectedRem;
+    }
+    return 0;
+  }, [formData.machineRemaining, formData.amount, machineContext]);
+
+  // Sync auto-calculated top-up to formData if detected
+  useEffect(() => {
+    if (topUpCalculation > 0 && !formData.topUpAmount) {
+      setFormData(prev => ({ ...prev, topUpAmount: topUpCalculation }));
+    } else if (topUpCalculation === 0 && formData.topUpAmount && !formData.manualTopUp) {
+      setFormData(prev => ({ ...prev, topUpAmount: '' }));
+    }
+  }, [topUpCalculation]);
+
+  const validation = useMemo(() => {
+    if (!formData.amount) return { accValid: true, remValid: true };
+    
+    const amount = Number(formData.amount);
+    let accValid = true;
+    let remValid = true;
+    let expectedAcc = machineContext.acc + amount;
+    let expectedRem = machineContext.rem !== null ? machineContext.rem - amount : null;
+
+    if (formData.machineMixed) {
+      accValid = Math.abs(Number(formData.machineMixed) - expectedAcc) < 0.01;
+    }
+
+    if (formData.machineRemaining && machineContext.rem !== null) {
+      const topUp = Number(formData.topUpAmount) || 0;
+      remValid = Math.abs(Number(formData.machineRemaining) - (expectedRem + topUp)) < 0.01;
+    }
+
+    return { accValid, remValid, expectedAcc, expectedRem };
+  }, [formData.machineMixed, formData.machineRemaining, formData.amount, formData.topUpAmount, machineContext]);
 
   if (!selectedCompany) return <div className="glass-card">กรุณาเพิ่มบริษัทก่อนบันทึกข้อมูล</div>;
 
@@ -369,7 +417,13 @@ const DataEntry = () => {
                   value={formData.machineRemaining} 
                   onChange={e => setFormData({...formData, machineRemaining: e.target.value})}
                   placeholder="0.00"
+                  className={!validation.remValid ? 'input-error' : ''}
                 />
+                {!validation.remValid && (
+                  <p className="text-danger" style={{ fontSize: '0.75rem', marginTop: '4px' }}>
+                    * ควรเป็น {(validation.expectedRem + (Number(formData.topUpAmount) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </p>
+                )}
               </div>
               <div className="form-group">
                 <label>ยอดสะสม (แถวล่าง)</label>
@@ -378,15 +432,32 @@ const DataEntry = () => {
                   value={formData.machineMixed} 
                   onChange={e => setFormData({...formData, machineMixed: e.target.value})}
                   placeholder="0.00"
-                  className={!isValidAccumulated ? 'input-error' : ''}
+                  className={!validation.accValid ? 'input-error' : ''}
                 />
-                {!isValidAccumulated && (
+                {!validation.accValid && (
                   <p className="text-danger" style={{ fontSize: '0.75rem', marginTop: '4px' }}>
-                    * ส่วนต่างสะสมไม่ตรงกับยอดเงิน (ควรเป็น {(previousAccumulated + Number(formData.amount)).toLocaleString()})
+                    * ควรเป็น {validation.expectedAcc.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </p>
                 )}
               </div>
             </div>
+
+            {(topUpCalculation > 0 || formData.manualTopUp) && (
+              <div className="form-group fade-in" style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--primary)' }}>
+                <label style={{ color: 'var(--primary)', fontWeight: 'bold' }}>✨ ตรวจพบยอดเติมเงิน (คาดการณ์)</label>
+                <input 
+                  type="number" 
+                  value={formData.topUpAmount} 
+                  onChange={e => setFormData({...formData, topUpAmount: e.target.value, manualTopUp: true})}
+                  placeholder="0.00"
+                  className="input-select full"
+                  style={{ marginTop: '0.5rem', borderColor: 'var(--primary)' }}
+                />
+                <p style={{ fontSize: '0.75rem', marginTop: '4px', color: 'var(--text-muted)' }}>
+                  * ระบบคำนวณเบื้องต้นให้ {topUpCalculation.toLocaleString()} บาท (แก้ไขได้)
+                </p>
+              </div>
+            )}
 
             <button className="btn btn-primary full py-3" onClick={saveRecord}>
               <Save size={18}/> บันทึกรายการ
@@ -407,7 +478,7 @@ const DataEntry = () => {
                     <div className="name">{r.serviceName}</div>
                     <div className="meta">{r.count} ชิ้น | ฿{r.amount.toLocaleString()}</div>
                   </div>
-                  <button className="btn-icon" onClick={() => deleteSingleRecord(r.serviceId, r.date, r.companyId)}>
+                  <button className="btn-icon" onClick={() => deleteSingleRecord(r.serviceId, r.date, r.companyId, r.timestamp)}>
                     <Trash2 size={16} color="#ef4444" />
                   </button>
                 </div>
@@ -724,29 +795,44 @@ const Navigation = ({ view, setView }) => (
       <button className={view === 'settings' ? 'active' : ''} onClick={() => setView('settings')}><Settings size={20}/> <span>ตั้งค่า</span></button>
     </div>
     <div className="nav-footer" style={{ marginTop: 'auto', padding: '1rem', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', borderTop: '1px solid var(--glass-border)' }}>
-      Version 1.3.3
+      Version 1.4.0
     </div>
   </nav>
 );
 
 const History = () => {
-  const { records, services, companies, deleteSingleRecord } = useApp();
+  const { records, services, companies, deleteSingleRecord, addRecord } = useApp();
+  const [editingKey, setEditingKey] = useState(null);
+  const [editData, setEditData] = useState({});
   
   const sortedRecords = useMemo(() => {
-    return [...records].sort((a, b) => new Date(b.date) - new Date(a.date));
+    return [...records].sort((a, b) => {
+      if (a.date !== b.date) return new Date(b.date) - new Date(a.date);
+      return (b.timestamp || 0) - (a.timestamp || 0);
+    });
   }, [records]);
+
+  const startEdit = (r, key) => {
+    setEditingKey(key);
+    setEditData({ ...r });
+  };
+
+  const saveEdit = () => {
+    // delete old, add new
+    deleteSingleRecord(editData.serviceId, editData.date, editData.companyId, editData.timestamp);
+    addRecord([editData]);
+    setEditingKey(null);
+  };
 
   const hasRecords = records.length > 0;
 
   return (
     <div className="fade-in">
-      <h1 style={{ marginBottom: '2rem' }}>
-        ประวัติ {hasRecords ? '' : '(ไม่มี)'}
-      </h1>
+      <h1 style={{ marginBottom: '2rem' }}>ประวัติการบันทึก</h1>
       
       {!hasRecords ? (
         <div className="glass-card text-center" style={{ padding: '4rem 2rem' }}>
-          <p className="text-muted">ยังไม่มีข้อมูลประวัติการบันทึก</p>
+          <p className="text-muted">ยังไม่มีข้อมูลในประวัติ</p>
         </div>
       ) : (
         <div className="glass-card">
@@ -759,6 +845,7 @@ const History = () => {
                   <th>บริการ</th>
                   <th>จำนวน</th>
                   <th>ยอดเงิน</th>
+                  <th>ยอดเติม</th>
                   <th>จัดการ</th>
                 </tr>
               </thead>
@@ -766,18 +853,50 @@ const History = () => {
                 {sortedRecords.map((r, idx) => {
                   const s = services.find(serv => serv.id === r.serviceId);
                   const c = companies.find(comp => comp.id === r.companyId);
+                  const key = `${r.date}-${r.companyId}-${r.serviceId}-${r.timestamp || idx}`;
+                  const isEditing = editingKey === key;
+                  
                   return (
-                    <tr key={`${r.date}-${r.companyId}-${r.serviceId}-${idx}`}>
-                      <td>{format(new Date(r.date), 'dd/MM/yyyy', { locale: th })}</td>
-                      <td style={{ textAlign: 'left' }}>{c?.name || 'Unknown'}</td>
-                      <td style={{ textAlign: 'left' }}>{s?.name || 'Unknown'}</td>
-                      <td>{r.count}</td>
-                      <td className="num">฿{r.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                      <td>
-                        <button className="btn-icon" onClick={() => deleteSingleRecord(r.serviceId, r.date, r.companyId)}>
-                          <Trash2 size={16} color="#ef4444" />
-                        </button>
-                      </td>
+                    <tr key={key}>
+                      {isEditing ? (
+                        <>
+                          <td><input type="date" value={editData.date} onChange={e => setEditData({...editData, date: e.target.value})} className="compact" /></td>
+                          <td>
+                            <select value={editData.companyId} onChange={e => setEditData({...editData, companyId: e.target.value})} className="compact">
+                              {companies.map(comp => <option key={comp.id} value={comp.id}>{comp.name}</option>)}
+                            </select>
+                          </td>
+                          <td>
+                            <select value={editData.serviceId} onChange={e => setEditData({...editData, serviceId: e.target.value})} className="compact">
+                              {services.map(serv => <option key={serv.id} value={serv.id}>{serv.name}</option>)}
+                            </select>
+                          </td>
+                          <td><input type="number" value={editData.count} onChange={e => setEditData({...editData, count: Number(e.target.value)})} className="compact" /></td>
+                          <td><input type="number" value={editData.amount} onChange={e => setEditData({...editData, amount: Number(e.target.value)})} className="compact" /></td>
+                          <td><input type="number" value={editData.topUpAmount} onChange={e => setEditData({...editData, topUpAmount: Number(e.target.value)})} className="compact" /></td>
+                          <td className="actions">
+                            <button className="btn-icon" onClick={saveEdit}><Check size={16} color="#10b981" /></button>
+                            <button className="btn-icon" onClick={() => setEditingKey(null)}><X size={16} color="#ef4444" /></button>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td>{format(new Date(r.date), 'dd/MM/yyyy', { locale: th })}</td>
+                          <td style={{ textAlign: 'left' }}>{c?.name || 'Unknown'}</td>
+                          <td style={{ textAlign: 'left' }}>{s?.name || 'Unknown'}</td>
+                          <td>{r.count}</td>
+                          <td className="num">฿{r.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                          <td className="num" style={{ color: r.topUpAmount > 0 ? 'var(--primary)' : 'inherit' }}>
+                            {r.topUpAmount > 0 ? `฿${r.topUpAmount.toLocaleString()}` : '-'}
+                          </td>
+                          <td className="actions">
+                            <button className="btn-icon" onClick={() => startEdit(r, key)}><Edit2 size={16} /></button>
+                            <button className="btn-icon" onClick={() => deleteSingleRecord(r.serviceId, r.date, r.companyId, r.timestamp)}>
+                              <Trash2 size={16} color="#ef4444" />
+                            </button>
+                          </td>
+                        </>
+                      )}
                     </tr>
                   );
                 })}

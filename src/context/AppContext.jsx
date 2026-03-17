@@ -102,8 +102,12 @@ export const AppProvider = ({ children }) => {
 
   const addRecord = (newRecords) => {
     setRecords(prev => {
+      // Use timestamp as unique ID if available, otherwise fallback to date/company/service composite
       const filtered = prev.filter(r => 
-        !newRecords.some(nr => nr.date === r.date && nr.companyId === r.companyId && nr.serviceId === r.serviceId)
+        !newRecords.some(nr => 
+          (nr.timestamp && r.timestamp === nr.timestamp) || 
+          (!nr.timestamp && nr.date === r.date && nr.companyId === r.companyId && nr.serviceId === r.serviceId)
+        )
       );
       return [...filtered, ...newRecords];
     });
@@ -113,8 +117,12 @@ export const AppProvider = ({ children }) => {
     setServices(prev => prev.map(s => s.id === id ? { ...s, ...updated } : s));
   };
 
-  const deleteSingleRecord = (serviceId, date, companyId) => {
-    setRecords(prev => prev.filter(r => !(r.serviceId === serviceId && r.date === date && r.companyId === companyId)));
+  const deleteSingleRecord = (serviceId, date, companyId, timestamp) => {
+    setRecords(prev => prev.filter(r => {
+      if (timestamp && r.timestamp === timestamp) return false;
+      if (!timestamp && r.serviceId === serviceId && r.date === date && r.companyId === companyId) return false;
+      return true;
+    }));
   };
 
   const deleteRecords = (date, companyId) => {
