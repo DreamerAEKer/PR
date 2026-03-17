@@ -195,6 +195,45 @@ const Dashboard = () => {
           </ResponsiveContainer>
         </div>
       </div>
+
+      <div className="glass-card mt-8">
+        <h2 style={{ marginBottom: '1.5rem' }}>สรุปข้อมูลจริงรายบริการ</h2>
+        <div className="scroll-x">
+          <table className="grid-entry-table">
+            <thead>
+              <tr>
+                <th>บริการ</th>
+                <th>รหัส</th>
+                <th>จำนวน (ชิ้น)</th>
+                <th>ยอดเงิน (฿)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {services.map(s => {
+                const serviceRecords = records.filter(r => r.serviceId === s.id);
+                const count = serviceRecords.reduce((sum, r) => sum + (Number(r.count) || 0), 0);
+                const amount = serviceRecords.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+                if (count === 0 && amount === 0) return null;
+                return (
+                  <tr key={s.id}>
+                    <td style={{ textAlign: 'left' }}>{s.name}</td>
+                    <td>{s.code}</td>
+                    <td>{count.toLocaleString()}</td>
+                    <td className="num">{amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr style={{ fontWeight: 'bold' }}>
+                <td colSpan={2}>รวมทั้งหมด</td>
+                <td>{stats.totalCount.toLocaleString()}</td>
+                <td className="num">฿{stats.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };
@@ -685,7 +724,7 @@ const Navigation = ({ view, setView }) => (
       <button className={view === 'settings' ? 'active' : ''} onClick={() => setView('settings')}><Settings size={20}/> <span>ตั้งค่า</span></button>
     </div>
     <div className="nav-footer" style={{ marginTop: 'auto', padding: '1rem', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', borderTop: '1px solid var(--glass-border)' }}>
-      Version 1.3.1
+      Version 1.3.2
     </div>
   </nav>
 );
