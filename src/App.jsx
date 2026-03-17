@@ -581,7 +581,7 @@ const Reports = () => {
                   const remaining = latestRecordWithMachineStatus?.machineRemaining;
                   const accumulated = latestRecordWithMachineStatus?.machineAccumulated;
 
-                  if (count === 0 && !remaining && !mixed) return null;
+                  if (count === 0 && !remaining && !accumulated) return null;
                   
                   return (
                     <tr key={c.id}>
