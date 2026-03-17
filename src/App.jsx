@@ -205,7 +205,7 @@ const DataEntry = () => {
   const [selectedDay, setSelectedDay] = useState(getSmartDefaultDate());
   const [selectedCompany, setSelectedCompany] = useState(companies[0]?.id || '');
   const [activeCategory, setActiveCategory] = useState('domestic');
-  const [formData, setFormData] = useState({ serviceId: '', count: '', amount: '' });
+  const [formData, setFormData] = useState({ serviceId: '', count: '', amount: '', machineRemaining: '', machineMixed: '' });
 
   const filteredServices = services.filter(s => s.category === activeCategory);
   
@@ -226,7 +226,9 @@ const DataEntry = () => {
       companyId: selectedCompany,
       serviceId: formData.serviceId,
       count: Number(formData.count),
-      amount: Number(formData.amount)
+      amount: Number(formData.amount),
+      machineRemaining: formData.machineRemaining ? Number(formData.machineRemaining) : null,
+      machineMixed: formData.machineMixed ? Number(formData.machineMixed) : null
     }]);
     setFormData({ ...formData, count: '', amount: '' });
   };
@@ -284,6 +286,26 @@ const DataEntry = () => {
                   type="number" 
                   value={formData.amount} 
                   onChange={e => setFormData({...formData, amount: e.target.value})}
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>งวดเหลือ (แถวบน)</label>
+                <input 
+                  type="number" 
+                  value={formData.machineRemaining} 
+                  onChange={e => setFormData({...formData, machineRemaining: e.target.value})}
+                  placeholder="0.00"
+                />
+              </div>
+              <div className="form-group">
+                <label>งวดผสม (แถวกลาง)</label>
+                <input 
+                  type="number" 
+                  value={formData.machineMixed} 
+                  onChange={e => setFormData({...formData, machineMixed: e.target.value})}
                   placeholder="0.00"
                 />
               </div>
@@ -506,50 +528,60 @@ const Reports = () => {
 
         {reportType === 'machine' && (
           <div className="print-machine portrait">
-            <header className="report-header">
-              <h3>ที่ทำการไปรษณีย์กลาง 10501 สังกัด ปน.3</h3>
-              <p>สรุปเครื่อง ประจำเดือน {format(reportMonth, 'MMMM yyyy', { locale: th })}</p>
+            <header className="report-header" style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>บัญชีสรุปการใช้เครื่องประทับไปรษณียากร</h3>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>ที่ทำการไปรษณีย์กลาง 10501 สังกัด ปน.3</h3>
+              <p style={{ marginTop: '0.5rem', fontSize: '1rem' }}>ประจำเดือน {format(reportMonth, 'MMMM yyyy', { locale: th })}</p>
             </header>
-            <table className="report-table bordered">
+            <table className="report-table bordered machine-report-table">
               <thead>
                 <tr>
-                  <th>ลำดับ</th>
-                  <th>รหัส</th>
-                  <th>รายชื่อผู้รับบริการ</th>
-                  <th>จำนวนชิ้น</th>
-                  <th>ยอดเงิน</th>
-                  <th>ภาษีมูลค่าเพิ่ม</th>
-                  <th>ยอดเงินสุทธิ</th>
+                  <th rowSpan={2} style={{ width: '100px' }}>เลขที่อนุญาต</th>
+                  <th rowSpan={2}>ชื่อผู้รับบริการ</th>
+                  <th rowSpan={2} style={{ width: '80px' }}>จำนวน<br/>ชิ้น</th>
+                  <th rowSpan={2} style={{ width: '120px' }}>ค่าไปรษณียากร<br/>บาท</th>
+                  <th colSpan={2}>เงินในรหัสเครื่อง ณ ปรับตั้งครั้งสุดท้าย</th>
+                </tr>
+                <tr>
+                  <th style={{ width: '100px' }}>แถวบน<br/>(งวดเหลือ)</th>
+                  <th style={{ width: '100px' }}>แถวกลาง<br/>(งวดผสม)</th>
                 </tr>
               </thead>
               <tbody>
-                {companies.map((c, idx) => {
+                {companies.map((c) => {
                   const companyRecords = stats.filter(r => r.companyId === c.id);
-                  const count = companyRecords.reduce((sum, r) => sum + r.count, 0);
-                  const amount = companyRecords.reduce((sum, r) => sum + r.amount, 0);
-                  const vat = amount * 0.07;
-                  const total = amount + vat;
-                  if (count === 0) return null;
+                  const count = companyRecords.reduce((sum, r) => sum + (Number(r.count) || 0), 0);
+                  const amount = companyRecords.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+                  
+                  // Get the latest recorded machine status for this company in this month
+                  const latestRecordWithMachineStatus = [...companyRecords]
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))
+                    .find(r => r.machineRemaining !== null || r.machineMixed !== null);
+                    
+                  const remaining = latestRecordWithMachineStatus?.machineRemaining;
+                  const mixed = latestRecordWithMachineStatus?.machineMixed;
+
+                  if (count === 0 && !remaining && !mixed) return null;
+                  
                   return (
                     <tr key={c.id}>
-                      <td>{idx + 1}</td>
                       <td>{c.code || '-'}</td>
                       <td style={{ textAlign: 'left' }}>{c.name}</td>
-                      <td className="num">{count.toLocaleString()}</td>
-                      <td className="num">{amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                      <td className="num">{vat.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                      <td className="num">{total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      <td className="num">{count > 0 ? count.toLocaleString() : '-'}</td>
+                      <td className="num">{amount > 0 ? amount.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}</td>
+                      <td className="num">{remaining != null ? remaining.toLocaleString(undefined, { minimumFractionDigits: 2 }) : ''}</td>
+                      <td className="num">{mixed != null ? mixed.toLocaleString(undefined, { minimumFractionDigits: 2 }) : ''}</td>
                     </tr>
                   );
                 })}
               </tbody>
               <tfoot>
                 <tr style={{ fontWeight: 'bold' }}>
-                  <td colSpan={3}>รวมทั้งสิ้น</td>
-                  <td className="num">{stats.reduce((sum, r) => sum + r.count, 0).toLocaleString()}</td>
-                  <td className="num">{stats.reduce((sum, r) => sum + r.amount, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                  <td className="num">{(stats.reduce((sum, r) => sum + r.amount, 0) * 0.07).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                  <td className="num">{(stats.reduce((sum, r) => sum + r.amount, 0) * 1.07).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                  <td colSpan={2} style={{ textAlign: 'right' }}>รวมทั้งสิ้น</td>
+                  <td className="num">{stats.reduce((sum, r) => sum + (Number(r.count) || 0), 0).toLocaleString()}</td>
+                  <td className="num">{stats.reduce((sum, r) => sum + (Number(r.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                  <td></td>
+                  <td></td>
                 </tr>
               </tfoot>
             </table>

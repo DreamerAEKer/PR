@@ -443,6 +443,15 @@
   font-weight: bold;
 }
 
+.machine-report-table th {
+  background: rgba(0,0,0,0.03);
+  text-align: center;
+}
+
+.report-table.bordered tr:nth-child(even) {
+  background: rgba(0,0,0,0.01);
+}
+
 .shadow-none {
   box-shadow: none !important;
 }
