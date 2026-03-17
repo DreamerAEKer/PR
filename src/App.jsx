@@ -469,101 +469,139 @@ const Reports = () => {
 
         {reportType === 'admin' && (
           <div className="print-admin portrait">
-            <div style={{ marginBottom: '1rem', borderBottom: '1px solid #ddd', paddingBottom: '0.5rem' }}>
-              <span style={{ fontSize: '0.85rem' }}>ประจำเดือน {format(reportMonth, 'MMMM yyyy', { locale: th })}</span>
-            </div>
+            <header className="report-header" style={{ marginBottom: '1rem', textAlign: 'left' }}>
+              <p style={{ fontSize: '0.8rem' }}>ประจำเดือน {format(reportMonth, 'MMMM yyyy', { locale: th })}</p>
+            </header>
             
-            <div className="admin-tables-stack">
-              {/* Table 1: Company Summary */}
-              <div className="admin-section">
-                <table className="report-table mini bordered shadow-none">
-                  <thead>
-                    <tr>
-                      <th style={{ textAlign: 'left', width: '250px' }}>บริษัทประทับ</th>
-                      <th style={{ width: '80px' }}>ชื้น</th>
-                      <th style={{ width: '120px' }}>เงิน</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {companySummary.map(c => (
-                      <tr key={c.id}>
-                        <td style={{ textAlign: 'left' }}>{c.name}</td>
-                        <td className="num">{c.count.toLocaleString()}</td>
-                        <td className="num">{c.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <div className="admin-complex-grid">
+              {/* Left Column */}
+              <div className="admin-left-col">
+                <div className="admin-section-box">
+                  <h4 className="section-title">เครื่องประทับ</h4>
+                  <table className="report-table mini bordered shadow-none">
+                    <thead>
+                      <tr>
+                        <th style={{ textAlign: 'left', width: '120px' }}>รายชื่อ</th>
+                        <th style={{ width: '40px' }}>ชื้น</th>
+                        <th style={{ width: '70px' }}>เงิน</th>
                       </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr style={{ fontWeight: 'bold' }}>
-                      <td style={{ textAlign: 'left' }}>รวม</td>
-                      <td className="num">{companySummary.reduce((sum, c) => sum + c.count, 0).toLocaleString()}</td>
-                      <td className="num">{companySummary.reduce((sum, c) => sum + c.amount, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                    </tr>
-                  </tfoot>
-                </table>
+                    </thead>
+                    <tbody>
+                      {companySummary.map(c => (
+                        <tr key={c.id}>
+                          <td style={{ textAlign: 'left' }}>{c.name}</td>
+                          <td className="num">{c.count.toLocaleString()}</td>
+                          <td className="num">{c.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr style={{ fontWeight: 'bold' }}>
+                        <td>รวม</td>
+                        <td className="num">{companySummary.reduce((sum, c) => sum + c.count, 0).toLocaleString()}</td>
+                        <td className="num">{companySummary.reduce((sum, c) => sum + c.amount, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+
+                <div className="admin-section-box mt-8">
+                  <h4 className="section-title">รับฝาก</h4>
+                  <table className="report-table mini bordered shadow-none">
+                    <thead>
+                      <tr>
+                        <th style={{ textAlign: 'left', width: '120px' }}>รายชื่อ</th>
+                        <th style={{ width: '40px' }}>ชิ้น</th>
+                        <th style={{ width: '70px' }}>เงิน</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* For now show same companies with 0 if no specific receiving data */}
+                      {companies.map(c => (
+                        <tr key={c.id}>
+                          <td style={{ textAlign: 'left' }}>{c.name}</td>
+                          <td className="num">0</td>
+                          <td className="num">0.00</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr style={{ fontWeight: 'bold' }}>
+                        <td>รวม</td>
+                        <td className="num">0</td>
+                        <td className="num">0.00</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
               </div>
 
-              {/* Table 2: Domestic Details */}
-              <div className="admin-section mt-8">
-                <table className="report-table mini bordered shadow-none">
-                  <thead>
-                    <tr>
-                      <th style={{ textAlign: 'left', width: '250px' }}>รายละเอียดรายการ (ในประเทศ)</th>
-                      <th style={{ width: '80px' }}>ชื้น</th>
-                      <th style={{ width: '120px' }}>เงิน</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {summaryData.filter(s => s.category === 'domestic').map(s => (
-                      <tr key={s.id}>
-                        <td style={{ textAlign: 'left' }}>{s.name}</td>
-                        <td className="num">{s.count.toLocaleString()}</td>
-                        <td className="num">{s.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr style={{ fontWeight: 'bold' }}>
-                      <td style={{ textAlign: 'left' }}>รวม</td>
-                      <td className="num">{summaryData.filter(s => s.category === 'domestic').reduce((sum, s) => sum + s.count, 0).toLocaleString()}</td>
-                      <td className="num">{summaryData.filter(s => s.category === 'domestic').reduce((sum, s) => sum + s.amount, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
+              {/* Right Column */}
+              <div className="admin-right-col">
+                <div className="admin-details-grid">
+                  <div className="admin-section-box">
+                    <h4 className="section-title">รายละเอียดรายการ</h4>
+                    <table className="report-table mini bordered shadow-none">
+                      <thead>
+                        <tr>
+                          <th style={{ textAlign: 'left' }}>ประเภท (ใน)</th>
+                          <th style={{ width: '40px' }}>ชิ้น</th>
+                          <th style={{ width: '70px' }}>เงิน</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {summaryData.filter(s => s.category === 'domestic').map(s => (
+                          <tr key={s.id}>
+                            <td style={{ textAlign: 'left' }}>{s.name}</td>
+                            <td className="num">{s.count.toLocaleString()}</td>
+                            <td className="num">{s.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr style={{ fontWeight: 'bold' }}>
+                          <td>รวม</td>
+                          <td className="num">{summaryData.filter(s => s.category === 'domestic').reduce((sum, s) => sum + s.count, 0).toLocaleString()}</td>
+                          <td className="num">{summaryData.filter(s => s.category === 'domestic').reduce((sum, s) => sum + s.amount, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
 
-              {/* Table 3: International Details */}
-              <div className="admin-section mt-8">
-                <table className="report-table mini bordered shadow-none">
-                  <thead>
-                    <tr>
-                      <th style={{ textAlign: 'left', width: '250px' }}>รับฝาก (ต่างประเทศ)</th>
-                      <th style={{ width: '80px' }}>ชื้น</th>
-                      <th style={{ width: '120px' }}>เงิน</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {summaryData.filter(s => s.category === 'international').map(s => (
-                      <tr key={s.id}>
-                        <td style={{ textAlign: 'left' }}>{s.name}</td>
-                        <td className="num">{s.count.toLocaleString()}</td>
-                        <td className="num">{s.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr style={{ fontWeight: 'bold' }}>
-                      <td style={{ textAlign: 'left' }}>รวม</td>
-                      <td className="num">{summaryData.filter(s => s.category === 'international').reduce((sum, s) => sum + s.count, 0).toLocaleString()}</td>
-                      <td className="num">{summaryData.filter(s => s.category === 'international').reduce((sum, s) => sum + s.amount, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                    </tr>
-                  </tfoot>
-                </table>
+                  <div className="admin-section-box">
+                    <h4 className="section-title">รายละเอียดรายการ</h4>
+                    <table className="report-table mini bordered shadow-none">
+                      <thead>
+                        <tr>
+                          <th style={{ textAlign: 'left' }}>รับฝาก (ต่าง)</th>
+                          <th style={{ width: '40px' }}>ชิ้น</th>
+                          <th style={{ width: '70px' }}>เงิน</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {summaryData.filter(s => s.category === 'international').map(s => (
+                          <tr key={s.id}>
+                            <td style={{ textAlign: 'left' }}>{s.name}</td>
+                            <td className="num">{s.count.toLocaleString()}</td>
+                            <td className="num">{s.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr style={{ fontWeight: 'bold' }}>
+                          <td>รวม</td>
+                          <td className="num">{summaryData.filter(s => s.category === 'international').reduce((sum, s) => sum + s.count, 0).toLocaleString()}</td>
+                          <td className="num">{summaryData.filter(s => s.category === 'international').reduce((sum, s) => sum + s.amount, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
               </div>
             </div>
             
-            <div className="mt-8 pt-4" style={{ borderTop: '2px solid #000', textAlign: 'right' }}>
-              <span style={{ fontSize: '1.2rem', fontWeight: '800' }}>รวมทั้งสิ้น ฿{summaryData.reduce((sum, s) => sum + s.amount, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            <div className="mt-8 pt-4" style={{ borderTop: '2.5px solid #000', textAlign: 'right' }}>
+              <span style={{ fontSize: '1.2rem', fontWeight: '900' }}>รวมทั้งสิ้น ฿{summaryData.reduce((sum, s) => sum + s.amount, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
             </div>
           </div>
         )}
