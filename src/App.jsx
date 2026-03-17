@@ -666,10 +666,71 @@ const Navigation = ({ view, setView }) => (
       <button className={view === 'settings' ? 'active' : ''} onClick={() => setView('settings')}><Settings size={20}/> <span>ตั้งค่า</span></button>
     </div>
     <div className="nav-footer" style={{ marginTop: 'auto', padding: '1rem', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', borderTop: '1px solid var(--glass-border)' }}>
-      Version 1.2.3
+      Version 1.2.4
     </div>
   </nav>
 );
+
+const History = () => {
+  const { records, services, companies, deleteSingleRecord } = useApp();
+  
+  const sortedRecords = useMemo(() => {
+    return [...records].sort((a, b) => new Date(b.date) - new Date(a.date));
+  }, [records]);
+
+  const hasRecords = records.length > 0;
+
+  return (
+    <div className="fade-in">
+      <h1 style={{ marginBottom: '2rem' }}>
+        ประวัติ {hasRecords ? '' : '(ไม่มี)'}
+      </h1>
+      
+      {!hasRecords ? (
+        <div className="glass-card text-center" style={{ padding: '4rem 2rem' }}>
+          <p className="text-muted">ยังไม่มีข้อมูลประวัติการบันทึก</p>
+        </div>
+      ) : (
+        <div className="glass-card">
+          <div className="scroll-x">
+            <table className="grid-entry-table">
+              <thead>
+                <tr>
+                  <th>วันที่</th>
+                  <th>บริษัท</th>
+                  <th>บริการ</th>
+                  <th>จำนวน</th>
+                  <th>ยอดเงิน</th>
+                  <th>จัดการ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedRecords.map((r, idx) => {
+                  const s = services.find(serv => serv.id === r.serviceId);
+                  const c = companies.find(comp => comp.id === r.companyId);
+                  return (
+                    <tr key={`${r.date}-${r.companyId}-${r.serviceId}-${idx}`}>
+                      <td>{format(new Date(r.date), 'dd/MM/yyyy', { locale: th })}</td>
+                      <td style={{ textAlign: 'left' }}>{c?.name || 'Unknown'}</td>
+                      <td style={{ textAlign: 'left' }}>{s?.name || 'Unknown'}</td>
+                      <td>{r.count}</td>
+                      <td className="num">฿{r.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      <td>
+                        <button className="btn-icon" onClick={() => deleteSingleRecord(r.serviceId, r.date, r.companyId)}>
+                          <Trash2 size={16} color="#ef4444" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const AppContent = () => {
   const [view, setView] = useState('dashboard');
@@ -688,7 +749,7 @@ const AppContent = () => {
             <BackupManager />
           </div>
         )}
-        {view === 'history' && <h1>ประวัติ (กำลังพัฒนา)</h1>}
+        {view === 'history' && <History />}
         {view === 'reports' && <Reports />}
       </main>
     </div>
