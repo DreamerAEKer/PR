@@ -402,21 +402,54 @@
 
 .num {
   text-align: right !important;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: 'Inter', sans-serif; /* Back to clean font, matching user preference for modern feel */
 }
 
-.admin-total-footer {
-  border-top: 2px solid #333;
-  padding-top: 15px;
+.report-table.bordered th, .report-table.bordered td {
+  border: 1px solid #000;
 }
 
-.admin-total-footer strong {
-  font-size: 1.2rem;
+.admin-grid-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.admin-table-box {
+  border: 1px solid #000;
+}
+
+.admin-table-box .report-table {
+  border: none;
+}
+
+.shadow-none {
+  box-shadow: none !important;
+}
+
+.report-canvas {
+  padding: 20mm;
+  min-height: 297mm; /* A4 height */
+  width: 210mm; /* A4 width */
+  margin: 0 auto;
 }
 
 .report-canvas header p {
   margin: 4px 0;
-  color: #666;
+  color: #000;
+  font-weight: 500;
+}
+
+.report-table th {
+  background: #f8f8f8;
+  border-bottom: 2px solid #000;
+}
+
+@media print {
+  .report-canvas {
+    padding: 0;
+    width: 100%;
+  }
 }
 
 /* Responsiveness */
