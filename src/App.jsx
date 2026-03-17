@@ -556,10 +556,10 @@ const Reports = () => {
             <table className="report-table bordered machine-report-table">
               <thead>
                 <tr>
-                  <th rowSpan={2} style={{ width: '100px' }}>เลขที่อนุญาต</th>
-                  <th rowSpan={2}>ชื่อผู้รับบริการ</th>
-                  <th rowSpan={2} style={{ width: '80px' }}>จำนวน<br/>ชิ้น</th>
-                  <th rowSpan={2} style={{ width: '120px' }}>ค่าไปรษณียากร<br/>บาท</th>
+                  <th rowSpan={2} style={{ width: '100px' }}>รหัส</th>
+                  <th rowSpan={2}>รายชื่อผู้รับบริการ</th>
+                  <th rowSpan={2} style={{ width: '80px' }}>จำนวน/ชิ้น</th>
+                  <th rowSpan={2} style={{ width: '120px' }}>ยอดเงินบาท/บาท</th>
                   <th colSpan={2}>เงินในรหัสเครื่อง ณ ปรับตั้งครั้งสุดท้าย</th>
                 </tr>
                 <tr>
