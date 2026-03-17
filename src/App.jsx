@@ -243,7 +243,16 @@ const DataEntry = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(getSmartDefaultDate());
   const [selectedCompany, setSelectedCompany] = useState(companies[0]?.id || '');
+  
+  // Auto-select company if currently empty but companies exist
+  useEffect(() => {
+    if (!selectedCompany && companies.length > 0) {
+      setSelectedCompany(companies[0].id);
+    }
+  }, [companies, selectedCompany]);
+
   const [activeCategory, setActiveCategory] = useState('domestic');
+
   const [formData, setFormData] = useState({ serviceId: '', count: '', amount: '', machineRemaining: '', machineMixed: '' });
 
   const filteredServices = useMemo(() => {
@@ -281,8 +290,9 @@ const DataEntry = () => {
       topUpAmount: formData.topUpAmount ? Number(formData.topUpAmount) : 0,
       timestamp: Date.now()
     }]);
-    setFormData({ ...formData, count: '', amount: '', machineRemaining: '', machineMixed: '', topUpAmount: '' });
+    setFormData({ serviceId: '', count: '', amount: '', machineRemaining: '', machineMixed: '', topUpAmount: '', manualTopUp: false });
   };
+
 
   const machineContext = useMemo(() => {
     // Find the chronologically latest record before (or same day but earlier timestamp) the current selection
@@ -501,7 +511,15 @@ const Reports = () => {
   const [reportType, setReportType] = useState('pn3'); // pn3, admin, company, machine
   const [selectedCompany, setSelectedCompany] = useState(companies[0]?.id || '');
 
+  // Auto-select company if currently empty but companies exist
+  useEffect(() => {
+    if (!selectedCompany && companies.length > 0) {
+      setSelectedCompany(companies[0].id);
+    }
+  }, [companies, selectedCompany]);
+
   const stats = useMemo(() => {
+
     const monthStr = format(reportMonth, 'yyyy-MM');
     const filtered = records.filter(r => r.date.startsWith(monthStr));
     
