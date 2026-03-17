@@ -1,3 +1,12 @@
+.text-danger {
+  color: #ef4444 !important;
+}
+
+.input-error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
 .app-layout {
   display: flex;
   min-height: 100vh;

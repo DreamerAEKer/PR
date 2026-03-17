@@ -228,10 +228,24 @@ const DataEntry = () => {
       count: Number(formData.count),
       amount: Number(formData.amount),
       machineRemaining: formData.machineRemaining ? Number(formData.machineRemaining) : null,
-      machineMixed: formData.machineMixed ? Number(formData.machineMixed) : null
+      machineAccumulated: formData.machineMixed ? Number(formData.machineMixed) : null
     }]);
-    setFormData({ ...formData, count: '', amount: '' });
+    setFormData({ ...formData, count: '', amount: '', machineRemaining: '', machineMixed: '' });
   };
+
+  const previousAccumulated = useMemo(() => {
+    const companyRecords = records.filter(r => r.companyId === selectedCompany && r.machineAccumulated != null);
+    const sorted = [...companyRecords].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const latest = sorted.find(r => new Date(r.date) < new Date(selectedDay));
+    return latest ? latest.machineAccumulated : 0;
+  }, [records, selectedCompany, selectedDay]);
+
+  const isValidAccumulated = useMemo(() => {
+    if (!formData.machineMixed || !formData.amount) return true;
+    const currentAcc = Number(formData.machineMixed);
+    const diff = currentAcc - previousAccumulated;
+    return Math.abs(diff - Number(formData.amount)) < 0.01;
+  }, [formData.machineMixed, formData.amount, previousAccumulated]);
 
   if (!selectedCompany) return <div className="glass-card">กรุณาเพิ่มบริษัทก่อนบันทึกข้อมูล</div>;
 
@@ -301,13 +315,19 @@ const DataEntry = () => {
                 />
               </div>
               <div className="form-group">
-                <label>งวดผสม (แถวกลาง)</label>
+                <label>ยอดสะสม (แถวล่าง)</label>
                 <input 
                   type="number" 
                   value={formData.machineMixed} 
                   onChange={e => setFormData({...formData, machineMixed: e.target.value})}
                   placeholder="0.00"
+                  className={!isValidAccumulated ? 'input-error' : ''}
                 />
+                {!isValidAccumulated && (
+                  <p className="text-danger" style={{ fontSize: '0.75rem', marginTop: '4px' }}>
+                    * ส่วนต่างสะสมไม่ตรงกับยอดเงิน (ควรเป็น {(previousAccumulated + Number(formData.amount)).toLocaleString()})
+                  </p>
+                )}
               </div>
             </div>
 
@@ -544,7 +564,7 @@ const Reports = () => {
                 </tr>
                 <tr>
                   <th style={{ width: '100px' }}>แถวบน<br/>(งวดเหลือ)</th>
-                  <th style={{ width: '100px' }}>แถวกลาง<br/>(งวดผสม)</th>
+                  <th style={{ width: '100px' }}>แถวล่าง<br/>(ยอดสะสม)</th>
                 </tr>
               </thead>
               <tbody>
@@ -556,10 +576,10 @@ const Reports = () => {
                   // Get the latest recorded machine status for this company in this month
                   const latestRecordWithMachineStatus = [...companyRecords]
                     .sort((a, b) => new Date(b.date) - new Date(a.date))
-                    .find(r => r.machineRemaining !== null || r.machineMixed !== null);
+                    .find(r => r.machineRemaining !== null || r.machineAccumulated !== null);
                     
                   const remaining = latestRecordWithMachineStatus?.machineRemaining;
-                  const mixed = latestRecordWithMachineStatus?.machineMixed;
+                  const accumulated = latestRecordWithMachineStatus?.machineAccumulated;
 
                   if (count === 0 && !remaining && !mixed) return null;
                   
@@ -570,7 +590,7 @@ const Reports = () => {
                       <td className="num">{count > 0 ? count.toLocaleString() : '-'}</td>
                       <td className="num">{amount > 0 ? amount.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}</td>
                       <td className="num">{remaining != null ? remaining.toLocaleString(undefined, { minimumFractionDigits: 2 }) : ''}</td>
-                      <td className="num">{mixed != null ? mixed.toLocaleString(undefined, { minimumFractionDigits: 2 }) : ''}</td>
+                      <td className="num">{accumulated != null ? accumulated.toLocaleString(undefined, { minimumFractionDigits: 2 }) : ''}</td>
                     </tr>
                   );
                 })}
