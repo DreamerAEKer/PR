@@ -372,7 +372,7 @@ const Reports = () => {
         <div style={{ display: 'flex', gap: '1rem' }}>
           <select className="input-select" value={reportType} onChange={e => setReportType(e.target.value)}>
             <option value="pn3">รายได้ส่ง ปน.3</option>
-            <option value="admin">ส่งธุรการ (รวม 3 ตาราง)</option>
+            <option value="admin">ส่งธุรการ</option>
             <option value="company">รายเดือนแยกบริษัท</option>
             <option value="machine">สรุปเครื่อง (SUMMARY MACHINE)</option>
           </select>
@@ -398,14 +398,14 @@ const Reports = () => {
               <p style={{ margin: '4px 0' }}>รายละเอียดรายได้บริการชำระตราไปรษณียากรด้วยเครื่องประทับของที่ทำการ</p>
               <p style={{ margin: 0 }}>ประจำเดือน {format(reportMonth, 'MMMM yyyy', { locale: th })}</p>
             </header>
-            <table className="report-table bordered">
+            <table className="report-table bordered" style={{ width: '100%' }}>
               <thead>
                 <tr>
-                  <th style={{ width: '60px' }}>ลำดับที่</th>
-                  <th style={{ width: '150px' }}>รหัสบัญชี (CA POS)</th>
+                  <th style={{ width: '40px' }}>ลำดับที่</th>
+                  <th style={{ width: '120px' }}>รหัสบัญชี (CA POS)</th>
                   <th>ชื่อบัญชี</th>
                   <th style={{ width: '150px' }}>จำนวนเงิน</th>
-                  <th style={{ width: '150px' }}>หมายเหตุ</th>
+                  <th style={{ width: '80px' }}>หมายเหตุ</th>
                 </tr>
               </thead>
               <tbody>
