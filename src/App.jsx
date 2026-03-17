@@ -208,15 +208,15 @@ const DataEntry = () => {
   const [formData, setFormData] = useState({ serviceId: '', count: '', amount: '', machineRemaining: '', machineMixed: '' });
 
   const filteredServices = useMemo(() => {
-    const list = services.filter(s => s.category === activeCategory);
-    return [...list].sort((a, b) => {
-      const rareKeywords = ['รับประกัน', 'รับรอง', 'ธุรกิจตอบรับ'];
-      const aIsRare = rareKeywords.some(kw => a.name.includes(kw));
-      const bIsRare = rareKeywords.some(kw => b.name.includes(kw));
-      if (aIsRare && !bIsRare) return 1;
-      if (!aIsRare && bIsRare) return -1;
-      return 0;
-    });
+    const rareKeywords = ['รับประกัน', 'รับรอง', 'ธุรกิจตอบรับ'];
+    return [...services]
+      .filter(s => s.category === activeCategory)
+      .sort((a, b) => {
+        const aIsRare = rareKeywords.some(kw => a.name.includes(kw));
+        const bIsRare = rareKeywords.some(kw => b.name.includes(kw));
+        if (aIsRare === bIsRare) return 0;
+        return aIsRare ? 1 : -1;
+      });
   }, [services, activeCategory]);
   
   const dailyRecords = records.filter(r => 
@@ -666,7 +666,7 @@ const Navigation = ({ view, setView }) => (
       <button className={view === 'settings' ? 'active' : ''} onClick={() => setView('settings')}><Settings size={20}/> <span>ตั้งค่า</span></button>
     </div>
     <div className="nav-footer" style={{ marginTop: 'auto', padding: '1rem', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', borderTop: '1px solid var(--glass-border)' }}>
-      Version 1.2.2
+      Version 1.2.3
     </div>
   </nav>
 );
