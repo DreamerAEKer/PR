@@ -60,12 +60,13 @@ export const AppProvider = ({ children }) => {
       
       const merged = [...parsed];
       defaultServices.forEach(ds => {
-        if (!currentMap.has(ds.code)) {
+        const existing = currentMap.get(ds.code);
+        if (!existing) {
           merged.push(ds);
         } else {
-          // Update reportGroupId for existing ones if missing
-          const existing = currentMap.get(ds.code);
-          if (!existing.reportGroupId) existing.reportGroupId = ds.reportGroupId;
+          // Sync system services: Update name and reportGroupId to match latest code
+          existing.name = ds.name;
+          existing.reportGroupId = ds.reportGroupId;
         }
       });
       return merged;
