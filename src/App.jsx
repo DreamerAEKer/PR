@@ -306,7 +306,7 @@ const DataEntry = () => {
             </div>
             <div className="form-row">
               <div className="form-group">
-                <label>งวดเหลือ (แถวบน)</label>
+                <label>ยอดคงเหลือ (แถวบน)</label>
                 <input 
                   type="number" 
                   value={formData.machineRemaining} 
@@ -563,7 +563,7 @@ const Reports = () => {
                   <th colSpan={2}>เงินในรหัสเครื่อง ณ ปรับตั้งครั้งสุดท้าย</th>
                 </tr>
                 <tr>
-                  <th style={{ width: '100px' }}>แถวบน<br/>(งวดเหลือ)</th>
+                  <th style={{ width: '100px' }}>แถวบน<br/>(ยอดคงเหลือ)</th>
                   <th style={{ width: '100px' }}>แถวล่าง<br/>(ยอดสะสม)</th>
                 </tr>
               </thead>
