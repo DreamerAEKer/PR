@@ -7,6 +7,11 @@
   box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
 }
 
+.rare-service {
+  color: var(--text-muted) !important;
+  font-style: italic;
+}
+
 .app-layout {
   display: flex;
   min-height: 100vh;

@@ -207,7 +207,16 @@ const DataEntry = () => {
   const [activeCategory, setActiveCategory] = useState('domestic');
   const [formData, setFormData] = useState({ serviceId: '', count: '', amount: '', machineRemaining: '', machineMixed: '' });
 
-  const filteredServices = services.filter(s => s.category === activeCategory);
+  const filteredServices = useMemo(() => {
+    const list = services.filter(s => s.category === activeCategory);
+    return [...list].sort((a, b) => {
+      const aIsRare = a.name.includes('รับประกัน');
+      const bIsRare = b.name.includes('รับประกัน');
+      if (aIsRare && !bIsRare) return 1;
+      if (!aIsRare && bIsRare) return -1;
+      return 0;
+    });
+  }, [services, activeCategory]);
   
   const dailyRecords = records.filter(r => 
     r.date === selectedDay && r.companyId === selectedCompany
@@ -280,7 +289,15 @@ const DataEntry = () => {
                 onChange={e => setFormData({...formData, serviceId: e.target.value})}
               >
                 <option value="">เลือกบริการ...</option>
-                {filteredServices.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
+                {filteredServices.map(s => (
+                  <option 
+                    key={s.id} 
+                    value={s.id} 
+                    className={s.name.includes('รับประกัน') ? 'rare-service' : ''}
+                  >
+                    {s.name} ({s.code})
+                  </option>
+                ))}
               </select>
             </div>
             
