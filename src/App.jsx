@@ -210,8 +210,9 @@ const DataEntry = () => {
   const filteredServices = useMemo(() => {
     const list = services.filter(s => s.category === activeCategory);
     return [...list].sort((a, b) => {
-      const aIsRare = a.name.includes('รับประกัน');
-      const bIsRare = b.name.includes('รับประกัน');
+      const rareKeywords = ['รับประกัน', 'รับรอง', 'ธุรกิจตอบรับ'];
+      const aIsRare = rareKeywords.some(kw => a.name.includes(kw));
+      const bIsRare = rareKeywords.some(kw => b.name.includes(kw));
       if (aIsRare && !bIsRare) return 1;
       if (!aIsRare && bIsRare) return -1;
       return 0;
@@ -293,7 +294,7 @@ const DataEntry = () => {
                   <option 
                     key={s.id} 
                     value={s.id} 
-                    className={s.name.includes('รับประกัน') ? 'rare-service' : ''}
+                    className={['รับประกัน', 'รับรอง', 'ธุรกิจตอบรับ'].some(kw => s.name.includes(kw)) ? 'rare-service' : ''}
                   >
                     {s.name} ({s.code})
                   </option>
@@ -665,7 +666,7 @@ const Navigation = ({ view, setView }) => (
       <button className={view === 'settings' ? 'active' : ''} onClick={() => setView('settings')}><Settings size={20}/> <span>ตั้งค่า</span></button>
     </div>
     <div className="nav-footer" style={{ marginTop: 'auto', padding: '1rem', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', borderTop: '1px solid var(--glass-border)' }}>
-      Version 1.2.1
+      Version 1.2.2
     </div>
   </nav>
 );
