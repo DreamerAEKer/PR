@@ -685,7 +685,7 @@ const Navigation = ({ view, setView }) => (
       <button className={view === 'settings' ? 'active' : ''} onClick={() => setView('settings')}><Settings size={20}/> <span>ตั้งค่า</span></button>
     </div>
     <div className="nav-footer" style={{ marginTop: 'auto', padding: '1rem', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', borderTop: '1px solid var(--glass-border)' }}>
-      Version 1.3.0
+      Version 1.3.1
     </div>
   </nav>
 );
