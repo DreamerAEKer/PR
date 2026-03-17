@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { LayoutDashboard, Settings, FileText, PlusCircle, Printer, Trash2, ChevronLeft, ChevronRight, Save, Edit2, Check, X, Download, Upload } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, subDays, isWeekend } from 'date-fns';
@@ -297,7 +297,7 @@ const DataEntry = () => {
 
     // Find the last record that is before the selected day OR same day (if we want to chain entries)
     // For a new entry, we look for the last one in the sorted list that isn't the current entry
-    const last = sorted.findLast(r => r.date <= selectedDay);
+    const last = [...sorted].reverse().find(r => r.date <= selectedDay);
     
     return last ? { acc: last.machineAccumulated, rem: last.machineRemaining } : { acc: 0, rem: null };
   }, [records, selectedCompany, selectedDay]);
