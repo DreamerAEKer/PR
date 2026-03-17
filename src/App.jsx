@@ -402,14 +402,33 @@ const Reports = () => {
   }, [records, reportMonth, reportType, selectedCompany]);
 
   const summaryData = useMemo(() => {
-    return services.map(s => {
-      const serviceRecords = stats.filter(r => r.serviceId === s.id);
-      return {
-        ...s,
-        count: serviceRecords.reduce((sum, r) => sum + r.count, 0),
-        amount: serviceRecords.reduce((sum, r) => sum + r.amount, 0)
-      };
+    // Generate unique list of report groups
+    const groups = [];
+    const processedGroups = new Set();
+    
+    services.forEach(s => {
+      const gId = s.reportGroupId || s.id;
+      if (!processedGroups.has(gId)) {
+        processedGroups.add(gId);
+        
+        // Find all services in this group
+        const groupServices = services.filter(sv => (sv.reportGroupId || sv.id) === gId);
+        const groupServiceIds = groupServices.map(sv => sv.id);
+        
+        // Sum all records matching these IDs
+        const groupRecords = stats.filter(r => groupServiceIds.includes(r.serviceId));
+        
+        groups.push({
+          id: gId,
+          code: s.code, // Use the first service's code as reference
+          name: s.name.includes('eCo-Post') || s.name.includes('ePacket') ? groupServices.find(sv => !sv.name.includes('e'))?.name || s.name : s.name,
+          count: groupRecords.reduce((sum, r) => sum + r.count, 0),
+          amount: groupRecords.reduce((sum, r) => sum + r.amount, 0)
+        });
+      }
     });
+    
+    return groups;
   }, [services, stats]);
 
   const companySummary = useMemo(() => {
@@ -666,7 +685,7 @@ const Navigation = ({ view, setView }) => (
       <button className={view === 'settings' ? 'active' : ''} onClick={() => setView('settings')}><Settings size={20}/> <span>ตั้งค่า</span></button>
     </div>
     <div className="nav-footer" style={{ marginTop: 'auto', padding: '1rem', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', borderTop: '1px solid var(--glass-border)' }}>
-      Version 1.2.4
+      Version 1.3.0
     </div>
   </nav>
 );

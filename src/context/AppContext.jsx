@@ -3,37 +3,74 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
+  // Helper for keyword matching
+  const findServiceMatch = (name, code, currentServices) => {
+    // 1. Match by Code
+    if (code) {
+      const match = currentServices.find(s => s.code === code);
+      if (match) return match.id;
+    }
+    // 2. Fuzzy match by name/keywords
+    const n = name.toLowerCase();
+    const isInter = n.includes('ต่างประเทศ') || n.includes('ระหว่างประเทศ') || n.includes('inter');
+    
+    if (n.includes('ems') || n.includes('ด่วนพิเศษ')) {
+      const match = currentServices.find(s => s.name.includes('ด่วนพิเศษ') && (isInter ? s.category === 'international' : s.category === 'domestic'));
+      if (match) return match.id;
+    }
+    
+    if (n.includes('ลงทะเบียน') || n.includes('ecopost') || n.includes('eco-post') || n.includes('epacket')) {
+      const match = currentServices.find(s => s.name.includes('ลงทะเบียน') && (isInter ? s.category === 'international' : s.category === 'domestic'));
+      if (match) return match.id;
+    }
+
+    if (n.includes('รับประกัน')) {
+      const match = currentServices.find(s => s.name.includes('รับประกัน') && (isInter ? s.category === 'international' : s.category === 'domestic'));
+      if (match) return match.id;
+    }
+
+    return null;
+  };
+
   const [services, setServices] = useState(() => {
+    const defaultServices = [
+      { id: '1', name: 'รายได้ไปรษณีย์ภัณฑ์ในประเทศ-ธรรมดา', code: '41010401', category: 'domestic', reportGroupId: '1' },
+      { id: '2', name: 'รายได้ไปรษณีย์ภัณฑ์ในประเทศ-รับรอง', code: '41010411', category: 'domestic', reportGroupId: '2' },
+      { id: '3', name: 'รายได้ไปรษณีย์ภัณฑ์ในประเทศ-ลงทะเบียน', code: '41010421', category: 'domestic', reportGroupId: '3' },
+      { id: '15', name: 'บริการ eCo-Post (ส่งลงทะเบียนอัพเกรด)', code: 'ECO01', category: 'domestic', reportGroupId: '3' },
+      { id: '4', name: 'รายได้ไปรษณีย์ภัณฑ์ในประเทศ-รับประกัน', code: '41010431', category: 'domestic', reportGroupId: '4' },
+      { id: '5', name: 'รายได้ไปรษณีย์ภัณฑ์ระหว่างประเทศ-ธรรมดา', code: '41010501', category: 'international', reportGroupId: '5' },
+      { id: '6', name: 'รายได้ไปรษณีย์ภัณฑ์ระหว่างประเทศ-ลงทะเบียน', code: '41010511', category: 'international', reportGroupId: '6' },
+      { id: '16', name: 'บริการ ePacket (ส่งลงทะเบียนระหว่างประเทศ)', code: 'EPK01', category: 'international', reportGroupId: '6' },
+      { id: '7', name: 'รายได้ไปรษณีย์ภัณฑ์ระหว่างประเทศ-รับประกัน', code: '41010521', category: 'international', reportGroupId: '7' },
+      { id: '8', name: 'รายได้พัสดุไปรษณีย์ภัณฑ์ในประเทศ-ธรรมดา', code: '41010601', category: 'domestic', reportGroupId: '8' },
+      { id: '9', name: 'รายได้พัสดุไปรษณีย์ภัณฑ์ในประเทศ-รับประกัน', code: '41010611', category: 'domestic', reportGroupId: '9' },
+      { id: '10', name: 'รายได้พัสดุไปรษณีย์ภัณฑ์ระหว่างประเทศ-ธรรมดา', code: '41010701', category: 'international', reportGroupId: '10' },
+      { id: '11', name: 'รายได้พัสดุไปรษณีย์ภัณฑ์ระหว่างประเทศ-รับประกัน', code: '41010711', category: 'international', reportGroupId: '11' },
+      { id: '12', name: 'รายได้ไปรษณีย์ด่วนพิเศษในประเทศ', code: '41010801', category: 'domestic', reportGroupId: '12' },
+      { id: '13', name: 'รายได้ไปรษณีย์ด่วนพิเศษระหว่างประเทศ', code: '41010901', category: 'international', reportGroupId: '13' },
+      { id: '14', name: 'รายได้บริการธุรกิจตอบรับ-ในประเทศ', code: '41012101', category: 'domestic', reportGroupId: '41012101' }
+    ];
+
     const saved = localStorage.getItem('postage_services');
     if (saved) {
       const parsed = JSON.parse(saved);
-      return parsed.map(s => {
-        if (!s.category) {
-          // Migration logic: assign category based on name if missing
-          return {
-            ...s,
-            category: s.name.includes('ในประเทศ') ? 'domestic' : 'international'
-          };
+      // Migration: Ensure all services have reportGroupId and add missing default services
+      const currentMap = new Map(parsed.map(s => [s.code || s.id, s]));
+      
+      const merged = [...parsed];
+      defaultServices.forEach(ds => {
+        if (!currentMap.has(ds.code)) {
+          merged.push(ds);
+        } else {
+          // Update reportGroupId for existing ones if missing
+          const existing = currentMap.get(ds.code);
+          if (!existing.reportGroupId) existing.reportGroupId = ds.reportGroupId;
         }
-        return s;
       });
+      return merged;
     }
-    return [
-      { id: '1', name: 'รายได้ไปรษณีย์ภัณฑ์ในประเทศ-ธรรมดา', code: '41010401', category: 'domestic' },
-      { id: '2', name: 'รายได้ไปรษณีย์ภัณฑ์ในประเทศ-รับรอง', code: '41010411', category: 'domestic' },
-      { id: '3', name: 'รายได้ไปรษณีย์ภัณฑ์ในประเทศ-ลงทะเบียน', code: '41010421', category: 'domestic' },
-      { id: '4', name: 'รายได้ไปรษณีย์ภัณฑ์ในประเทศ-รับประกัน', code: '41010431', category: 'domestic' },
-      { id: '5', name: 'รายได้ไปรษณีย์ภัณฑ์ระหว่างประเทศ-ธรรมดา', code: '41010501', category: 'international' },
-      { id: '6', name: 'รายได้ไปรษณีย์ภัณฑ์ระหว่างประเทศ-ลงทะเบียน', code: '41010511', category: 'international' },
-      { id: '7', name: 'รายได้ไปรษณีย์ภัณฑ์ระหว่างประเทศ-รับประกัน', code: '41010521', category: 'international' },
-      { id: '8', name: 'รายได้พัสดุไปรษณีย์ภัณฑ์ในประเทศ-ธรรมดา', code: '41010601', category: 'domestic' },
-      { id: '9', name: 'รายได้พัสดุไปรษณีย์ภัณฑ์ในประเทศ-รับประกัน', code: '41010611', category: 'domestic' },
-      { id: '10', name: 'รายได้พัสดุไปรษณีย์ภัณฑ์ระหว่างประเทศ-ธรรมดา', code: '41010701', category: 'international' },
-      { id: '11', name: 'รายได้พัสดุไปรษณีย์ภัณฑ์ระหว่างประเทศ-รับประกัน', code: '41010711', category: 'international' },
-      { id: '12', name: 'รายได้ไปรษณีย์ด่วนพิเศษในประเทศ', code: '41010801', category: 'domestic' },
-      { id: '13', name: 'รายได้ไปรษณีย์ด่วนพิเศษระหว่างประเทศ', code: '41010901', category: 'international' },
-      { id: '14', name: 'รายได้บริการธุรกิจตอบรับ-ในประเทศ', code: '41012101', category: 'domestic' }
-    ];
+    return defaultServices;
   });
 
   const [companies, setCompanies] = useState(() => {
@@ -64,7 +101,6 @@ export const AppProvider = ({ children }) => {
 
   const addRecord = (newRecords) => {
     setRecords(prev => {
-      // Filter out old records for the same date/company/service if they exist
       const filtered = prev.filter(r => 
         !newRecords.some(nr => nr.date === r.date && nr.companyId === r.companyId && nr.serviceId === r.serviceId)
       );
@@ -85,7 +121,7 @@ export const AppProvider = ({ children }) => {
   };
 
   const exportData = () => {
-    const data = { services, companies, records, version: '1.0', exportDate: new Date().toISOString() };
+    const data = { services, companies, records, version: '1.1', exportDate: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -101,11 +137,40 @@ export const AppProvider = ({ children }) => {
       try {
         const data = JSON.parse(e.target.result);
         if (data.services && data.companies && data.records) {
-          if (confirm('คำเตือน: การนำเข้าข้อมูลจะเขียนทับข้อมูลปัจจุบันทั้งหมด คุณต้องการดำเนินการต่อหรือไม่?')) {
+          const mode = confirm('ต้องการเขียนทับข้อมูลเดิมทั้งหมดหรือไม่?\n(ตกลง = เขียนทับ, ยกเลิก = รวมข้อมูลเดิม)') ? 'overwrite' : 'merge';
+          
+          if (mode === 'overwrite') {
             setServices(data.services);
             setCompanies(data.companies);
             setRecords(data.records);
-            alert('นำเข้าข้อมูลสำเร็จแล้ว!');
+            alert('นำเข้าแบบเขียนทับสำเร็จแล้ว!');
+          } else {
+            // MERGE Logic
+            setCompanies(prev => {
+              const merged = [...prev];
+              data.companies.forEach(nc => {
+                if (!merged.find(c => c.code === nc.code)) merged.push(nc);
+              });
+              return merged;
+            });
+
+            const processedRecords = data.records.map(r => {
+              const oldService = data.services.find(s => s.id === r.serviceId);
+              if (!oldService) return r;
+              
+              const newServiceId = findServiceMatch(oldService.name, oldService.code, services);
+              return { ...r, serviceId: newServiceId || r.serviceId };
+            });
+
+            setRecords(prev => {
+              const merged = [...prev];
+              processedRecords.forEach(nr => {
+                const isDuplicate = merged.find(r => r.date === nr.date && r.companyId === nr.companyId && r.serviceId === nr.serviceId);
+                if (!isDuplicate) merged.push(nr);
+              });
+              return merged;
+            });
+            alert('รวมข้อมูลสำเร็จเรียบร้อยแล้ว!');
           }
         } else {
           alert('รูปแบบไฟล์ไม่ถูกต้อง');
