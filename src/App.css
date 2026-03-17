@@ -414,43 +414,36 @@
   color: #000;
 }
 
-.admin-complex-grid {
+.admin-exact-layout {
   display: flex;
-  gap: 2rem;
-  align-items: flex-start;
+  flex-direction: column;
 }
 
-.admin-left-col {
+.admin-row {
+  display: flex;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.admin-table-wrapper {
+  margin-bottom: 2rem;
+}
+
+.admin-table-wrapper.half {
   flex: 1;
 }
 
-.admin-right-col {
-  flex: 1.5;
-}
-
-.admin-details-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.admin-section-box {
-  margin-bottom: 1.5rem;
-}
-
 .section-title {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: bold;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   text-align: left;
   color: #000;
-  border-left: 3px solid #000;
-  padding-left: 8px;
 }
 
 .report-table.mini td, .report-table.mini th {
-  padding: 4px 6px;
-  font-size: 0.85rem;
+  padding: 6px 10px;
+  font-size: 0.9rem;
 }
 
 .bold {

@@ -469,21 +469,51 @@ const Reports = () => {
 
         {reportType === 'admin' && (
           <div className="print-admin portrait">
-            <header className="report-header" style={{ marginBottom: '1rem', textAlign: 'left' }}>
+            <header className="report-header" style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
               <p style={{ fontSize: '0.8rem' }}>ประจำเดือน {format(reportMonth, 'MMMM yyyy', { locale: th })}</p>
             </header>
             
-            <div className="admin-complex-grid">
-              {/* Left Column */}
-              <div className="admin-left-col">
-                <div className="admin-section-box">
-                  <h4 className="section-title">เครื่องประทับ</h4>
+            <div className="admin-exact-layout">
+              {/* Table 1: Service Summary (Domestic) */}
+              <div className="admin-table-wrapper">
+                <h4 className="section-title">เครื่องประทับ</h4>
+                <table className="report-table mini bordered shadow-none">
+                  <thead>
+                    <tr>
+                      <th style={{ textAlign: 'left', width: '250px' }}>ประเภทบริการ</th>
+                      <th style={{ width: '80px' }}>ชื้น</th>
+                      <th style={{ width: '120px' }}>เงิน</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {summaryData.filter(s => s.category === 'domestic').map(s => (
+                      <tr key={s.id}>
+                        <td style={{ textAlign: 'left' }}>{s.name}</td>
+                        <td className="num">{s.count.toLocaleString()}</td>
+                        <td className="num">{s.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bold">
+                      <td style={{ textAlign: 'left' }}>รวม</td>
+                      <td className="num">{summaryData.filter(s => s.category === 'domestic').reduce((sum, s) => sum + s.count, 0).toLocaleString()}</td>
+                      <td className="num">{summaryData.filter(s => s.category === 'domestic').reduce((sum, s) => sum + s.amount, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              {/* Row: Middle Tables (Side by Side) */}
+              <div className="admin-row mt-8">
+                <div className="admin-table-wrapper half">
+                  <h4 className="section-title">รายละเอียดรายการ</h4>
                   <table className="report-table mini bordered shadow-none">
                     <thead>
                       <tr>
-                        <th style={{ textAlign: 'left', width: '120px' }}>รายชื่อ</th>
-                        <th style={{ width: '40px' }}>ชื้น</th>
-                        <th style={{ width: '70px' }}>เงิน</th>
+                        <th style={{ textAlign: 'left' }}>ผู้ส่ง (ในประเทศ)</th>
+                        <th style={{ width: '50px' }}>ชิ้น</th>
+                        <th style={{ width: '80px' }}>เงิน</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -496,7 +526,7 @@ const Reports = () => {
                       ))}
                     </tbody>
                     <tfoot>
-                      <tr style={{ fontWeight: 'bold' }}>
+                      <tr className="bold">
                         <td>รวม</td>
                         <td className="num">{companySummary.reduce((sum, c) => sum + c.count, 0).toLocaleString()}</td>
                         <td className="num">{companySummary.reduce((sum, c) => sum + c.amount, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
@@ -505,18 +535,18 @@ const Reports = () => {
                   </table>
                 </div>
 
-                <div className="admin-section-box mt-8">
-                  <h4 className="section-title">รับฝาก</h4>
+                <div className="admin-table-wrapper half">
+                  <h4 className="section-title">รายละเอียดรายการ</h4>
                   <table className="report-table mini bordered shadow-none">
                     <thead>
                       <tr>
-                        <th style={{ textAlign: 'left', width: '120px' }}>รายชื่อ</th>
-                        <th style={{ width: '40px' }}>ชิ้น</th>
-                        <th style={{ width: '70px' }}>เงิน</th>
+                        <th style={{ textAlign: 'left' }}>ผู้ส่ง (ต่างประเทศ)</th>
+                        <th style={{ width: '50px' }}>ชิ้น</th>
+                        <th style={{ width: '80px' }}>เงิน</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {/* For now show same companies with 0 if no specific receiving data */}
+                      {/* Placeholder for international company summary */}
                       {companies.map(c => (
                         <tr key={c.id}>
                           <td style={{ textAlign: 'left' }}>{c.name}</td>
@@ -526,7 +556,7 @@ const Reports = () => {
                       ))}
                     </tbody>
                     <tfoot>
-                      <tr style={{ fontWeight: 'bold' }}>
+                      <tr className="bold">
                         <td>รวม</td>
                         <td className="num">0</td>
                         <td className="num">0.00</td>
@@ -536,67 +566,34 @@ const Reports = () => {
                 </div>
               </div>
 
-              {/* Right Column */}
-              <div className="admin-right-col">
-                <div className="admin-details-grid">
-                  <div className="admin-section-box">
-                    <h4 className="section-title">รายละเอียดรายการ</h4>
-                    <table className="report-table mini bordered shadow-none">
-                      <thead>
-                        <tr>
-                          <th style={{ textAlign: 'left' }}>ประเภท (ใน)</th>
-                          <th style={{ width: '40px' }}>ชิ้น</th>
-                          <th style={{ width: '70px' }}>เงิน</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {summaryData.filter(s => s.category === 'domestic').map(s => (
-                          <tr key={s.id}>
-                            <td style={{ textAlign: 'left' }}>{s.name}</td>
-                            <td className="num">{s.count.toLocaleString()}</td>
-                            <td className="num">{s.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      <tfoot>
-                        <tr style={{ fontWeight: 'bold' }}>
-                          <td>รวม</td>
-                          <td className="num">{summaryData.filter(s => s.category === 'domestic').reduce((sum, s) => sum + s.count, 0).toLocaleString()}</td>
-                          <td className="num">{summaryData.filter(s => s.category === 'domestic').reduce((sum, s) => sum + s.amount, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-
-                  <div className="admin-section-box">
-                    <h4 className="section-title">รายละเอียดรายการ</h4>
-                    <table className="report-table mini bordered shadow-none">
-                      <thead>
-                        <tr>
-                          <th style={{ textAlign: 'left' }}>รับฝาก (ต่าง)</th>
-                          <th style={{ width: '40px' }}>ชิ้น</th>
-                          <th style={{ width: '70px' }}>เงิน</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {summaryData.filter(s => s.category === 'international').map(s => (
-                          <tr key={s.id}>
-                            <td style={{ textAlign: 'left' }}>{s.name}</td>
-                            <td className="num">{s.count.toLocaleString()}</td>
-                            <td className="num">{s.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      <tfoot>
-                        <tr style={{ fontWeight: 'bold' }}>
-                          <td>รวม</td>
-                          <td className="num">{summaryData.filter(s => s.category === 'international').reduce((sum, s) => sum + s.count, 0).toLocaleString()}</td>
-                          <td className="num">{summaryData.filter(s => s.category === 'international').reduce((sum, s) => sum + s.amount, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-                </div>
+              {/* Table 4: Service Summary (International) */}
+              <div className="admin-table-wrapper mt-8">
+                <h4 className="section-title">รับฝาก</h4>
+                <table className="report-table mini bordered shadow-none">
+                  <thead>
+                    <tr>
+                      <th style={{ textAlign: 'left', width: '250px' }}>ประเภทบริการ (ต่างประเทศ)</th>
+                      <th style={{ width: '80px' }}>ชิ้น</th>
+                      <th style={{ width: '120px' }}>เงิน</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {summaryData.filter(s => s.category === 'international').map(s => (
+                      <tr key={s.id}>
+                        <td style={{ textAlign: 'left' }}>{s.name}</td>
+                        <td className="num">{s.count.toLocaleString()}</td>
+                        <td className="num">{s.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bold">
+                      <td style={{ textAlign: 'left' }}>รวม</td>
+                      <td className="num">{summaryData.filter(s => s.category === 'international').reduce((sum, s) => sum + s.count, 0).toLocaleString()}</td>
+                      <td className="num">{summaryData.filter(s => s.category === 'international').reduce((sum, s) => sum + s.amount, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                  </tfoot>
+                </table>
               </div>
             </div>
             
