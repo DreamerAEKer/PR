@@ -12,23 +12,46 @@ const THAI_HOLIDAYS_2026 = [
   '2026-07-30', '2026-08-12', '2026-10-13', '2026-10-23', '2026-12-05', '2026-12-10', '2026-12-31'
 ];
 
-const getPreviousWorkDay = (date) => {
-  let target = subDays(date, 1);
-  while (isWeekend(target) || THAI_HOLIDAYS_2026.includes(format(target, 'yyyy-MM-dd'))) {
-    target = target.getDay() === 0 ? subDays(target, 2) : subDays(target, 1); // Optimization: if Sunday, skip Sat-Sun
-    if (isWeekend(target) || THAI_HOLIDAYS_2026.includes(format(target, 'yyyy-MM-dd'))) continue;
+// Defensive Utility: Safe Date Formatting
+const safeFormat = (date, formatStr, options) => {
+  try {
+    if (!date) return '-';
+    const d = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(d.getTime())) return '-';
+    return format(d, formatStr, options);
+  } catch (e) {
+    console.error('Date formatting error:', e);
+    return '-';
   }
-  return target;
+};
+
+const getPreviousWorkDay = (date) => {
+  try {
+    let target = subDays(date, 1);
+    let iterations = 0;
+    while (iterations < 10 && (isWeekend(target) || THAI_HOLIDAYS_2026.includes(format(target, 'yyyy-MM-dd')))) {
+      target = target.getDay() === 0 ? subDays(target, 2) : subDays(target, 1);
+      iterations++;
+    }
+    return target;
+  } catch (e) {
+    return subDays(date, 1);
+  }
 };
 
 const getSmartDefaultDate = () => {
-  const today = new Date();
-  // Simple check for weekend/holiday to find the most relevant "yesterday"
-  let target = subDays(today, 1);
-  while (isWeekend(target) || THAI_HOLIDAYS_2026.includes(format(target, 'yyyy-MM-dd'))) {
-    target = subDays(target, 1);
+  try {
+    const today = new Date();
+    let target = subDays(today, 1);
+    let iterations = 0;
+    while (iterations < 10 && (isWeekend(target) || THAI_HOLIDAYS_2026.includes(format(target, 'yyyy-MM-dd')))) {
+      target = subDays(target, 1);
+      iterations++;
+    }
+    return format(target, 'yyyy-MM-dd');
+  } catch (e) {
+    return format(new Date(), 'yyyy-MM-dd');
   }
-  return format(target, 'yyyy-MM-dd');
 };
 
 // Subcomponents
@@ -267,12 +290,15 @@ const DataEntry = () => {
       });
   }, [services, activeCategory]);
   
-  const dailyRecords = records.filter(r => 
-    r.date === selectedDay && r.companyId === selectedCompany
-  ).map(r => ({
-    ...r,
-    serviceName: services.find(s => s.id === r.serviceId)?.name || 'Unknown'
-  }));
+  const dailyRecords = useMemo(() => {
+    if (!records || !Array.isArray(records)) return [];
+    return records
+      .filter(r => r && r.date === selectedDay && r.companyId === selectedCompany)
+      .map(r => ({
+        ...r,
+        serviceName: services.find(s => s.id === r.serviceId)?.name || 'Unknown'
+      }));
+  }, [records, selectedDay, selectedCompany, services]);
 
   const saveRecord = () => {
     if (!formData.serviceId || !formData.count || !formData.amount) {
@@ -297,11 +323,16 @@ const DataEntry = () => {
   const machineContext = useMemo(() => {
     // Find the chronologically latest record before (or same day but earlier timestamp) the current selection
     // to determine the machine state context.
-    const companyRecords = records.filter(r => r.companyId === selectedCompany && r.machineAccumulated != null);
+    const companyRecords = (records || []).filter(r => r && r.companyId === selectedCompany && r.machineAccumulated != null);
     
     // Sort all records by date and then by timestamp
     const sorted = [...companyRecords].sort((a, b) => {
-      if (a.date !== b.date) return new Date(a.date) - new Date(b.date);
+      if (a.date !== b.date) {
+        const da = new Date(a.date).getTime();
+        const db = new Date(b.date).getTime();
+        if (isNaN(da) || isNaN(db)) return 0;
+        return da - db;
+      }
       return (a.timestamp || 0) - (b.timestamp || 0);
     });
 
@@ -326,12 +357,13 @@ const DataEntry = () => {
 
   // Sync auto-calculated top-up to formData if detected
   useEffect(() => {
-    if (topUpCalculation > 0 && !formData.topUpAmount) {
+    // Only update if value actually changed to avoid infinite cycles
+    if (topUpCalculation > 0 && formData.topUpAmount !== topUpCalculation) {
       setFormData(prev => ({ ...prev, topUpAmount: topUpCalculation }));
     } else if (topUpCalculation === 0 && formData.topUpAmount && !formData.manualTopUp) {
       setFormData(prev => ({ ...prev, topUpAmount: '' }));
     }
-  }, [topUpCalculation]);
+  }, [topUpCalculation, formData.topUpAmount, formData.manualTopUp]);
 
   const validation = useMemo(() => {
     if (!formData.amount) return { accValid: true, remValid: true };
@@ -342,13 +374,16 @@ const DataEntry = () => {
     let expectedAcc = machineContext.acc + amount;
     let expectedRem = machineContext.rem !== null ? machineContext.rem - amount : null;
 
-    if (formData.machineMixed) {
-      accValid = Math.abs(Number(formData.machineMixed) - expectedAcc) < 0.01;
+    const currentMachineRem = formData.machineRemaining ? Number(formData.machineRemaining) : null;
+    const currentMachineMixed = formData.machineMixed ? Number(formData.machineMixed) : null;
+    const currentTopUp = Number(formData.topUpAmount) || 0;
+
+    if (currentMachineMixed != null) {
+      accValid = Math.abs(currentMachineMixed - expectedAcc) < 0.01;
     }
 
-    if (formData.machineRemaining && machineContext.rem !== null) {
-      const topUp = Number(formData.topUpAmount) || 0;
-      remValid = Math.abs(Number(formData.machineRemaining) - (expectedRem + topUp)) < 0.01;
+    if (currentMachineRem != null && machineContext.rem !== null) {
+      remValid = Math.abs(currentMachineRem - (expectedRem + currentTopUp)) < 0.01;
     }
 
     return { accValid, remValid, expectedAcc, expectedRem };
@@ -477,7 +512,7 @@ const DataEntry = () => {
 
         {/* Daily Summary */}
         <div className="glass-card">
-          <h2 className="mb-4">รายการของวันที่ {format(new Date(selectedDay), 'd MMMM yyyy', { locale: th })}</h2>
+          <h2 className="mb-4">รายการของวันที่ {safeFormat(selectedDay, 'd MMMM yyyy', { locale: th })}</h2>
           {dailyRecords.length === 0 ? (
             <p className="text-muted">ยังไม่มีการบันทึกข้อมูลสำหรับวันนี้</p>
           ) : (
@@ -520,8 +555,8 @@ const Reports = () => {
 
   const stats = useMemo(() => {
 
-    const monthStr = format(reportMonth, 'yyyy-MM');
-    const filtered = records.filter(r => r.date.startsWith(monthStr));
+    const monthStr = safeFormat(reportMonth, 'yyyy-MM');
+    const filtered = (records || []).filter(r => r && r.date && r.date.startsWith(monthStr));
     
     if (reportType === 'company') {
       return filtered.filter(r => r.companyId === selectedCompany);
@@ -603,7 +638,7 @@ const Reports = () => {
             <header className="report-header" style={{ marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '1.1rem', margin: 0 }}>ที่ทำการ ไปรษณีย์กลาง สังกัด ปน.3</h3>
               <p style={{ margin: '4px 0' }}>รายละเอียดรายได้บริการชำระตราไปรษณียากรด้วยเครื่องประทับของที่ทำการ</p>
-              <p style={{ margin: 0 }}>ประจำเดือน {format(reportMonth, 'MMMM yyyy', { locale: th })}</p>
+              <p style={{ margin: 0 }}>ประจำเดือน {safeFormat(reportMonth, 'MMMM yyyy', { locale: th })}</p>
             </header>
             <table className="report-table bordered" style={{ width: '100%' }}>
               <thead>
@@ -640,8 +675,8 @@ const Reports = () => {
         {reportType === 'company' && (
           <div className="print-company portrait">
             <header className="report-header" style={{ textAlign: 'left' }}>
-              <h2>{companies.find(c => c.id === selectedCompany)?.name}</h2>
-              <p>ประจำเดือน {format(reportMonth, 'MMMM yyyy', { locale: th })}</p>
+              <h2>{companies.find(c => c.id === selectedCompany)?.name || ''}</h2>
+              <p>ประจำเดือน {safeFormat(reportMonth, 'MMMM yyyy', { locale: th })}</p>
             </header>
             <table className="report-table compact">
               <thead>
@@ -677,7 +712,7 @@ const Reports = () => {
         {reportType === 'admin' && (
           <div className="print-admin portrait">
             <header className="report-header" style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
-              <p style={{ fontSize: '1.1rem', fontWeight: 'bold', borderBottom: 'none' }}>ประจำเดือน {format(reportMonth, 'MMMM yyyy', { locale: th })}</p>
+              <p style={{ fontSize: '1.1rem', fontWeight: 'bold', borderBottom: 'none' }}>ประจำเดือน {safeFormat(reportMonth, 'MMMM yyyy', { locale: th })}</p>
             </header>
             
             <div className="admin-simple-layout">
@@ -716,7 +751,7 @@ const Reports = () => {
             <header className="report-header" style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>บัญชีสรุปการใช้เครื่องประทับไปรษณียากร</h3>
               <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>ที่ทำการไปรษณีย์กลาง 10501 สังกัด ปน.3</h3>
-              <p style={{ marginTop: '0.5rem', fontSize: '1rem' }}>ประจำเดือน {format(reportMonth, 'MMMM yyyy', { locale: th })}</p>
+              <p style={{ marginTop: '0.5rem', fontSize: '1rem' }}>ประจำเดือน {safeFormat(reportMonth, 'MMMM yyyy', { locale: th })}</p>
             </header>
             <table className="report-table bordered machine-report-table">
               <thead>
@@ -813,7 +848,7 @@ const Navigation = ({ view, setView }) => (
       <button className={view === 'settings' ? 'active' : ''} onClick={() => setView('settings')}><Settings size={20}/> <span>ตั้งค่า</span></button>
     </div>
     <div className="nav-footer" style={{ marginTop: 'auto', padding: '1rem', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', borderTop: '1px solid var(--glass-border)' }}>
-      Version 1.4.0
+      Version 1.5.0
     </div>
   </nav>
 );
@@ -824,8 +859,14 @@ const History = () => {
   const [editData, setEditData] = useState({});
   
   const sortedRecords = useMemo(() => {
-    return [...records].sort((a, b) => {
-      if (a.date !== b.date) return new Date(b.date) - new Date(a.date);
+    return [...(records || [])].filter(Boolean).sort((a, b) => {
+      if (a.date !== b.date) {
+        const da = new Date(a.date).getTime();
+        const db = new Date(b.date).getTime();
+        if (isNaN(da)) return 1;
+        if (isNaN(db)) return -1;
+        return db - da; 
+      }
       return (b.timestamp || 0) - (a.timestamp || 0);
     });
   }, [records]);
@@ -899,7 +940,7 @@ const History = () => {
                         </>
                       ) : (
                         <>
-                          <td>{format(new Date(r.date), 'dd/MM/yyyy', { locale: th })}</td>
+                          <td>{safeFormat(r.date, 'dd/MM/yyyy', { locale: th })}</td>
                           <td style={{ textAlign: 'left' }}>{c?.name || 'Unknown'}</td>
                           <td style={{ textAlign: 'left' }}>{s?.name || 'Unknown'}</td>
                           <td>{r.count}</td>

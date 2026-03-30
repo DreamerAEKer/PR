@@ -91,27 +91,51 @@ export const AppProvider = ({ children }) => {
   });
 
   useEffect(() => {
-    localStorage.setItem('postage_services', JSON.stringify(services));
+    try {
+      localStorage.setItem('postage_services', JSON.stringify(services));
+    } catch (e) {
+      console.error('Failed to save services to localStorage:', e);
+    }
   }, [services]);
 
   useEffect(() => {
-    localStorage.setItem('postage_companies', JSON.stringify(companies));
+    try {
+      localStorage.setItem('postage_companies', JSON.stringify(companies));
+    } catch (e) {
+      console.error('Failed to save companies to localStorage:', e);
+    }
   }, [companies]);
 
   useEffect(() => {
-    localStorage.setItem('postage_records', JSON.stringify(records));
+    try {
+      localStorage.setItem('postage_records', JSON.stringify(records));
+    } catch (e) {
+      console.error('Failed to save records to localStorage:', e);
+      if (e.name === 'QuotaExceededError') {
+        alert('หน่วยความจำเต็ม! ไม่สามารถบันทึกข้อมูลเพิ่มเติมได้ กรุณาสำรองข้อมูลและล้างข้อมูลเก่า');
+      }
+    }
   }, [records]);
 
   const addRecord = (newRecords) => {
+    if (!newRecords || !Array.isArray(newRecords)) return;
+    
+    // Filter out invalid/null records
+    const validNewRecords = newRecords.filter(nr => nr && nr.serviceId && nr.date);
+    if (validNewRecords.length === 0) return;
+
     setRecords(prev => {
+      // Ensure prev is an array
+      const currentRecords = Array.isArray(prev) ? prev : [];
+      
       // Use timestamp as unique ID if available, otherwise fallback to date/company/service composite
-      const filtered = prev.filter(r => 
-        !newRecords.some(nr => 
+      const filtered = currentRecords.filter(r => 
+        r && !validNewRecords.some(nr => 
           (nr.timestamp && r.timestamp === nr.timestamp) || 
           (!nr.timestamp && nr.date === r.date && nr.companyId === r.companyId && nr.serviceId === r.serviceId)
         )
       );
-      return [...filtered, ...newRecords];
+      return [...filtered, ...validNewRecords];
     });
   };
 
