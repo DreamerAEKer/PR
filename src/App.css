@@ -518,3 +518,136 @@
     padding: 1.5rem;
   }
 }
+/* admin_v2 Report Styles */
+.print-admin-v2 {
+  color: #000;
+  font-family: 'Sarabun', sans-serif;
+}
+
+.report-header-v2 p {
+  margin: 0;
+  border-bottom: none !important;
+}
+
+.admin-v2-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.admin-v2-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.admin-v2-section {
+  flex: 1;
+}
+
+.admin-v2-section.table-main {
+  width: 50%; /* Table 1 is actually not full width in the image, it's about half */
+}
+
+.compact-v2 th, .compact-v2 td {
+  padding: 2px 6px !important;
+  font-size: 0.75rem !important;
+  height: 20px;
+}
+
+.compact-v2 th {
+  background: #f0f0f0 !important;
+}
+
+@media print {
+  .print-admin-v2 {
+    width: 210mm;
+  }
+}
+
+/* machine_v2 Report Styles */
+.print-machine-v2 {
+  color: #000;
+  font-family: 'Sarabun', sans-serif;
+  background: white;
+}
+
+.machine-v2-table {
+  border-collapse: collapse !important;
+  width: 100% !important;
+}
+
+.machine-v2-table th, .machine-v2-table td {
+  border: 1px solid #000 !important;
+  padding: 3px 5px !important;
+}
+
+.machine-v2-table th {
+  background: #f2f2f2 !important;
+  font-size: 0.8rem !important;
+  font-weight: bold !important;
+  text-align: center !important;
+}
+
+.machine-v2-table td {
+  font-size: 0.85rem !important;
+  height: 22px;
+}
+
+.machine-v2-table .num {
+  text-align: right !important;
+  padding-right: 8px !important;
+  min-width: 60px;
+}
+
+.machine-v2-table tfoot td {
+  background: #f9f9f9 !important;
+  font-weight: bold !important;
+}
+
+.report-logo-container img {
+  max-width: 100px;
+}
+
+/* PN3 Ver 2 Report Styles */
+.print-pn3-v2 {
+  color: #000;
+  font-family: 'Sarabun', sans-serif;
+  padding: 10px;
+  background: white;
+}
+
+.pn3-v2-table {
+  border-collapse: collapse !important;
+  width: 100% !important;
+  margin-top: 1rem;
+}
+
+.pn3-v2-table th, .pn3-v2-table td {
+  border: 1px solid #000 !important;
+  padding: 4px 8px !important;
+}
+
+.pn3-v2-table th {
+  background: #f2f2f2 !important;
+  font-size: 0.9rem !important;
+  font-weight: bold !important;
+  text-align: center !important;
+}
+
+.pn3-v2-table td {
+  font-size: 0.95rem !important;
+}
+
+.pn3-v2-table .num {
+  text-align: right !important;
+  padding-right: 15px !important;
+}
+
+.pn3-v2-table tfoot td {
+  background: #f9f9f9 !important;
+}
+
+.report-header-v2 h2 {
+  letter-spacing: 1px;
+}

@@ -141,31 +141,93 @@ const ServicesManager = () => {
 };
 
 const CompaniesManager = () => {
-  const { companies, setCompanies } = useApp();
-  const [newName, setNewName] = useState('');
+  const { companies, setCompanies, updateCompany } = useApp();
+  const [newCompany, setNewCompany] = useState({ name: '', code: '' });
+  const [editingId, setEditingId] = useState(null);
+  const [editValues, setEditValues] = useState({});
 
   const add = () => {
-    if (!newName) return;
-    setCompanies([...companies, { name: newName, id: Date.now().toString() }]);
-    setNewName('');
+    if (!newCompany.name) return;
+    setCompanies([...companies, { ...newCompany, id: Date.now().toString() }]);
+    setNewCompany({ name: '', code: '' });
   };
 
   const remove = (id) => setCompanies(companies.filter(c => c.id !== id));
 
+  const startEdit = (c) => {
+    setEditingId(c.id);
+    setEditValues(c);
+  };
+
+  const saveEdit = () => {
+    updateCompany(editingId, editValues);
+    setEditingId(null);
+  };
+
   return (
-    <div className="glass-card">
+    <div className="glass-card mt-8">
       <h2 style={{ marginBottom: '1rem' }}>จัดการบริษัทลูกค้า</h2>
       <div className="flex-form">
-        <input placeholder="ชื่อบริษัท" value={newName} onChange={e => setNewName(e.target.value)} />
+        <input placeholder="รหัสบริษัท (ถ้ามี)" value={newCompany.code} onChange={e => setNewCompany({...newCompany, code: e.target.value})} />
+        <input placeholder="ชื่อบริษัท" value={newCompany.name} onChange={e => setNewCompany({...newCompany, name: e.target.value})} style={{ flex: 2 }} />
         <button className="btn btn-primary" onClick={add}><PlusCircle size={18}/> เพิ่ม</button>
       </div>
-      <div className="company-chips mt-4">
-        {companies.map(c => (
-          <div key={c.id} className="chip">
-            {c.name}
-            <button className="btn-icon" onClick={() => remove(c.id)}><Trash2 size={14} /></button>
-          </div>
-        ))}
+      
+      <div className="scroll-x mt-6">
+        <table className="grid-entry-table">
+          <thead>
+            <tr>
+              <th style={{ width: '40px' }}>แสดง</th>
+              <th style={{ width: '100px' }}>รหัส</th>
+              <th>ชื่อบริษัทลูกค้า</th>
+              <th style={{ width: '100px' }}>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[...companies].sort((a,b) => {
+              if (a.code && b.code) return a.code.localeCompare(b.code, 'en', { numeric: true });
+              if (a.code) return -1;
+              if (b.code) return 1;
+              return a.name.localeCompare(b.name, 'th');
+            }).map(c => (
+              <tr key={c.id}>
+                {editingId === c.id ? (
+                  <>
+                    <td style={{ textAlign: 'center' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={!editValues.isHidden} 
+                        onChange={e => setEditValues({...editValues, isHidden: !e.target.checked})} 
+                      />
+                    </td>
+                    <td><input value={editValues.code || ''} onChange={e => setEditValues({...editValues, code: e.target.value})} className="compact" /></td>
+                    <td><input value={editValues.name} onChange={e => setEditValues({...editValues, name: e.target.value})} className="compact full" /></td>
+                    <td className="actions">
+                      <button className="btn-icon" onClick={saveEdit}><Check size={16} color="#10b981" /></button>
+                      <button className="btn-icon" onClick={() => setEditingId(null)}><X size={16} color="#ef4444" /></button>
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td style={{ textAlign: 'center' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={!c.isHidden} 
+                        onChange={e => updateCompany(c.id, { isHidden: !e.target.checked })} 
+                      />
+                    </td>
+                    <td>{c.code || '-'}</td>
+                    <td style={{ textAlign: 'left' }}>{c.name}</td>
+                    <td className="actions">
+                      <button className="btn-icon" onClick={() => startEdit(c)}><Edit2 size={16} /></button>
+                      <button className="btn-icon" onClick={() => remove(c.id)}><Trash2 size={16} color="#ef4444" /></button>
+                    </td>
+                  </>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -397,7 +459,16 @@ const DataEntry = () => {
         <h1>บันทึกข้อมูลรายวัน</h1>
         <div className="flex-form-controls">
           <select className="input-select" value={selectedCompany} onChange={e => setSelectedCompany(e.target.value)}>
-            {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            {companies
+              .filter(c => !c.isHidden)
+              .sort((a,b) => {
+                if (a.code && b.code) return a.code.localeCompare(b.code, 'en', { numeric: true });
+                if (a.code) return -1;
+                if (b.code) return 1;
+                return a.name.localeCompare(b.name, 'th');
+              })
+              .map(c => <option key={c.id} value={c.id}>{c.name} {c.code ? `(${c.code})` : ''}</option>)
+            }
           </select>
           <input type="date" className="input-select" value={selectedDay} onChange={e => setSelectedDay(e.target.value)} />
         </div>
@@ -541,7 +612,7 @@ const DataEntry = () => {
 };
 
 const Reports = () => {
-  const { services, companies, records } = useApp();
+  const { services, companies, records, reportLogo } = useApp();
   const [reportMonth, setReportMonth] = useState(new Date());
   const [reportType, setReportType] = useState('pn3'); // pn3, admin, company, machine
   const [selectedCompany, setSelectedCompany] = useState(companies[0]?.id || '');
@@ -614,9 +685,12 @@ const Reports = () => {
         <div style={{ display: 'flex', gap: '1rem' }}>
           <select className="input-select" value={reportType} onChange={e => setReportType(e.target.value)}>
             <option value="pn3">รายได้ส่ง ปน.3</option>
+            <option value="pn3_v2">รายได้ส่ง ปน.3 Ver 2</option>
             <option value="admin">ส่งธุรการ</option>
+            <option value="admin_v2">ส่งธุรการ Ver 2</option>
             <option value="company">รายเดือนแยกบริษัท</option>
             <option value="machine">สรุปเครื่อง (SUMMARY MACHINE)</option>
+            <option value="machine_v2">สรุปเครื่องประทับ Ver 2</option>
           </select>
           {reportType === 'company' && (
             <select className="input-select" value={selectedCompany} onChange={e => setSelectedCompany(e.target.value)}>
@@ -633,6 +707,70 @@ const Reports = () => {
       </div>
 
       <div className="report-canvas">
+        {reportType === 'pn3_v2' && (
+          <div className="print-pn3-v2 portrait">
+            <header className="report-header-v2" style={{ textAlign: 'center', marginBottom: '1rem' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 'bold', margin: '0' }}>ที่ทำการ &nbsp;&nbsp;ไปรษณีย์กลาง &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;สังกัด ปน.3</h2>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', margin: '5px 0' }}>รายละเอียดรายได้บริการชำระตราไปรษณียากรด้วยเครื่องประทับของที่ทำการ</h3>
+              <p style={{ fontSize: '1rem', fontWeight: 'bold', margin: '5px 0' }}>ประจำเดือน {safeFormat(reportMonth, 'MMMM yyyy', { locale: th })}</p>
+            </header>
+
+            <table className="report-table bordered pn3-v2-table">
+              <thead>
+                <tr>
+                  <th style={{ width: '60px' }}>ลำดับที่</th>
+                  <th style={{ width: '120px' }}>รหัสบัญชี (CA POS)</th>
+                  <th>ชื่อบัญชี</th>
+                  <th style={{ width: '150px' }}>จำนวนเงิน</th>
+                  <th style={{ width: '100px' }}>หมายเหตุ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { id: '1', code: '41010401', name: 'รายได้ไปรษณียภัณฑ์ในประเทศ-ธรรมดา' },
+                  { id: '2', code: '41010411', name: 'รายได้ไปรษณียภัณฑ์ในประเทศ-รับรอง' },
+                  { id: '3', code: '41010421', name: 'รายได้ไปรษณียภัณฑ์ในประเทศ-ลงทะเบียน' },
+                  { id: '4', code: '41010431', name: 'รายได้ไปรษณียภัณฑ์ในประเทศ-รับประกัน' },
+                  { id: '5', code: '41010501', name: 'รายได้ไปรษณียภัณฑ์ระหว่างประเทศ-ธรรมดา' },
+                  { id: '6', code: '41010511', name: 'รายได้ไปรษณียภัณฑ์ระหว่างประเทศ-ลงทะเบียน' },
+                  { id: '7', code: '41010521', name: 'รายได้ไปรษณียภัณฑ์ระหว่างประเทศ-รับประกัน' },
+                  { id: '8', code: '41010601', name: 'รายได้พัสดุไปรษณีย์ภัณฑ์ในประเทศ-ธรรมดา' },
+                  { id: '9', code: '41010611', name: 'รายได้พัสดุไปรษณีย์ภัณฑ์ในประเทศ-รับประกัน' },
+                  { id: '10', code: '41010701', name: 'รายได้พัสดุไปรษณีย์ภัณฑ์ระหว่างประเทศ-ธรรมดา' },
+                  { id: '11', code: '41010711', name: 'รายได้พัสดุไปรษณีย์ภัณฑ์ระหว่างประเทศรับ-รับประกัน' },
+                  { id: '12', code: '41010801', name: 'รายได้ไปรษณีย์ด่วนพิเศษในประเทศ' },
+                  { id: '13', code: '41010901', name: 'รายได้ไปรษณีย์ด่วนพิเศษระหว่างประเทศ' },
+                  { id: '14', code: '41012101', name: 'รายได้บริการธุรกิจตอบรับ-ในประเทศ' }
+                ].map((row, index) => {
+                  const groupAmount = stats.reduce((sum, r) => {
+                    const s = services.find(serv => serv.id === r.serviceId);
+                    return s && s.reportGroupId === row.id ? sum + r.amount : sum;
+                  }, 0);
+                  
+                  return (
+                    <tr key={row.code}>
+                      <td style={{ textAlign: 'center' }}>{index + 1}</td>
+                      <td style={{ textAlign: 'center' }}>{row.code}</td>
+                      <td style={{ textAlign: 'left', paddingLeft: '10px' }}>{row.name}</td>
+                      <td className="num">{groupAmount > 0 ? groupAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }) : ''}</td>
+                      <td></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr style={{ fontWeight: 'bold', height: '35px' }}>
+                  <td colSpan={3} style={{ textAlign: 'center' }}>รวมทั้งสิ้น</td>
+                  <td className="num" style={{ borderBottom: 'double 3px #000' }}>
+                    {stats.reduce((sum, r) => sum + r.amount, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
+
         {reportType === 'pn3' && (
           <div className="print-summary portrait">
             <header className="report-header" style={{ marginBottom: '1.5rem' }}>
@@ -746,6 +884,312 @@ const Reports = () => {
           </div>
         )}
 
+        {reportType === 'admin_v2' && (
+          <div className="print-admin-v2 portrait">
+            <header className="report-header-v2" style={{ marginBottom: '10px', textAlign: 'left', paddingLeft: '50px' }}>
+              <p style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+                {(() => {
+                  const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+                  const monthStr = months[reportMonth.getMonth()];
+                  const yearBE = (reportMonth.getFullYear() + 543).toString().slice(-2);
+                  return `${monthStr}-${yearBE}`;
+                })()}
+              </p>
+            </header>
+            
+            <div className="admin-v2-grid">
+              {/* Table 1: เครื่องประทับ (Circle) */}
+              <div className="admin-v2-section table-main">
+                <table className="report-table bordered compact-v2">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '220px' }}>เครื่องประทับ</th>
+                      <th style={{ width: '80px' }}>ชิ้น</th>
+                      <th style={{ width: '120px' }}>เงิน</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { label: 'จดหมายธรรมดาในฯ', ids: ['1'] },
+                      { label: 'สิ่งพิมพ์ธรรมดาในฯ', ids: ['17'] },
+                      { label: 'ไปรษณีย์บัตร', ids: ['18'] },
+                      { label: 'จดหมายธรรมดาต่างฯ', ids: ['5'] },
+                      { label: 'สิ่งพิมพ์ธรรมดาต่างฯ', ids: ['19'] },
+                      { label: 'ไปรษณีย์บัตรต่างฯ', ids: ['20'] },
+                      { label: 'ลงทะเบียนในฯ', ids: ['3', '15'] },
+                      { label: 'ลงทะเบียนต่างฯ', ids: ['6', '16'] },
+                      { label: 'พัสดุในฯ', ids: ['8'] },
+                      { label: 'พัสดุต่างฯ', ids: ['10'] },
+                      { label: 'พัสดุย่อย', ids: ['21'] },
+                      { label: 'รับประกัน', ids: ['4', '7', '9', '11'] },
+                      { label: 'รับรอง', ids: ['2'] },
+                      { label: 'ems ในฯ', ids: ['12'] },
+                      { label: 'ems ต่างฯ', ids: ['13'] }
+                    ].map(row => {
+                      const rowRecords = stats.filter(r => row.ids.includes(r.serviceId));
+                      const count = rowRecords.reduce((sum, r) => sum + r.count, 0);
+                      const amount = rowRecords.reduce((sum, r) => sum + r.amount, 0);
+                      return (
+                        <tr key={row.label}>
+                          <td style={{ textAlign: 'left' }}>{row.label}</td>
+                          <td className="num">{count > 0 ? count.toLocaleString() : ''}</td>
+                          <td className="num">{amount > 0 ? amount.toLocaleString(undefined, { minimumFractionDigits: 2 }) : ''}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr style={{ fontWeight: 'bold' }}>
+                      <td style={{ textAlign: 'right' }}>รวม</td>
+                      <td className="num">{
+                        [ '1', '17', '18', '5', '19', '20', '3', '15', '6', '16', '8', '10', '21', '4', '7', '9', '11', '2', '12', '13' ]
+                          .reduce((sum, id) => sum + stats.filter(r => r.serviceId === id).reduce((s, r) => s + r.count, 0), 0)
+                          .toLocaleString()
+                      }</td>
+                      <td className="num">{
+                        [ '1', '17', '18', '5', '19', '20', '3', '15', '6', '16', '8', '10', '21', '4', '7', '9', '11', '2', '12', '13' ]
+                          .reduce((sum, id) => sum + stats.filter(r => r.serviceId === id).reduce((s, r) => s + r.amount, 0), 0)
+                          .toLocaleString(undefined, { minimumFractionDigits: 2 })
+                      }</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              {/* Table 2 & 3: รายเดือนเอกชน / รายเดือนราชการ */}
+              <div className="admin-v2-row">
+                <div className="admin-v2-section">
+                  <table className="report-table bordered compact-v2">
+                    <thead>
+                      <tr>
+                        <th style={{ width: '150px' }}>รายเดือนเอกชน</th>
+                        <th style={{ width: '60px' }}>ชิ้น</th>
+                        <th style={{ width: '100px' }}>เงิน</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        'จดหมายธรรมดาในฯ', 'สิ่งพิมพ์ธรรมดาในฯ', 'ไปรษณีย์บัตร',
+                        'จดหมายธรรมดาต่างฯ', 'สิ่งพิมพ์ธรรมดาต่างฯ', 'ไปรษณีย์บัตรต่างฯ',
+                        'ลงทะเบียนในฯ', 'ลงทะเบียนต่างฯ', 'พัสดุในฯ', 'พัสดุต่างฯ',
+                        'พัสดุย่อย', 'รับประกัน', 'รับรอง', 'EMSใน', 'EMSต่าง'
+                      ].map(label => (
+                        <tr key={label}>
+                          <td style={{ textAlign: 'left' }}>{label}</td><td></td><td></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr><td style={{ textAlign: 'right' }}>รวม</td><td className="num">0</td><td className="num">0.00</td></tr>
+                    </tfoot>
+                  </table>
+                </div>
+
+                <div className="admin-v2-section">
+                  <table className="report-table bordered compact-v2">
+                    <thead>
+                      <tr>
+                        <th style={{ width: '150px' }}>รายเดือนราชการ</th>
+                        <th style={{ width: '60px' }}>ชิ้น</th>
+                        <th style={{ width: '100px' }}>เงิน</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        'จดหมายธรรมดาในฯ', 'สิ่งพิมพ์ธรรมดาในฯ', 'ไปรษณีย์บัตร',
+                        'จดหมายธรรมดาต่างฯ', 'สิ่งพิมพ์ธรรมดาต่างฯ', 'ไปรษณีย์บัตรต่างฯ',
+                        'ลงทะเบียนในฯ', 'ลงทะเบียนต่างฯ', 'พัสดุในฯ', 'พัสดุต่างฯ',
+                        'พัสดุย่อย', 'รับประกัน', 'EMSใน', 'EMSต่าง'
+                      ].map(label => (
+                        <tr key={label}>
+                          <td style={{ textAlign: 'left' }}>{label}</td><td></td><td></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr><td style={{ textAlign: 'right' }}>รวม</td><td className="num">0</td><td className="num">0.00</td></tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+
+              {/* Table 4: เงินสด */}
+              <div className="admin-v2-section" style={{ width: '50%' }}>
+                <table className="report-table bordered compact-v2">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '150px' }}>เงินสด</th>
+                      <th style={{ width: '60px' }}>ชิ้น</th>
+                      <th style={{ width: '100px' }}>เงิน</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      'จดหมายธรรมดาในฯ', 'สิ่งพิมพ์ธรรมดาในฯ', 'ไปรษณีย์บัตร',
+                      'พัสดุในฯ', 'ลงทะเบียนในฯ', 'ตราสิน', 'รับรอง'
+                    ].map(label => (
+                      <tr key={label}>
+                        <td style={{ textAlign: 'left' }}>{label}</td><td></td><td></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr><td style={{ textAlign: 'right' }}>รวม</td><td className="num">0.00</td><td className="num">0.00</td></tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {reportType === 'machine_v2' && (
+          <div className="print-machine-v2 portrait">
+            <header className="report-header-v3" style={{ textAlign: 'center', marginBottom: '1rem', padding: '0 50px' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '0' }}>บัญชีสรุปการใช้เครื่องประทับไปรษณียากร</h3>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '2px 0' }}>ที่ทำการไปรษณีย์กลาง 10501 สังกัด ปน.3</h3>
+              <p style={{ marginTop: '0.5rem', fontSize: '1.0rem', fontWeight: 'bold' }}>
+                ประจำเดือน {safeFormat(reportMonth, 'MMMM yyyy', { locale: th })}
+              </p>
+            </header>
+
+            <table className="report-table bordered machine-v2-table">
+              <thead>
+                <tr>
+                  <th rowSpan={2} style={{ width: '80px' }}>เลขที่อนุญาต</th>
+                  <th rowSpan={2}>ชื่อผู้ใช้บริการ</th>
+                  <th rowSpan={2} style={{ width: '70px' }}>จำนวน<br/>ชิ้น</th>
+                  <th rowSpan={2} style={{ width: '90px' }}>ค่าไปรษณียากร<br/>บาท</th>
+                  <th colSpan={2}>เงินในเครื่องมือฝากส่งครั้งล่าสุด</th>
+                </tr>
+                <tr>
+                  <th style={{ width: '100px' }}>แถวบน (ยอดคงเหลือ )</th>
+                  <th style={{ width: '100px' }}>แถวล่าง (ยอดสะสม )</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  'H0032', 'H0128', 'H0130', 'H0143', 'H0148', 'H0223', 'H0241', 'H0250', 'H0267', 'H0298', 'H0308',
+                  'P0403', 'P0574', 'P0617', 'P0727', 'P1074', 'P3028', 'P3064', 'P3088', 'P3111', 'P3114', 'P3115',
+                  'N20011', 'N20028', 'N20032', 'N40011', 'N40016', 'N40019', 'N40021', 'N40022', 'N40027'
+                ].map((code) => {
+                  // Official company mapping
+                  const officialCompany = companies.find(comp => comp.code === code);
+                  const officialName = officialCompany?.name || '';
+                  
+                  // Extract core name for fuzzy matching (removing common prefixes/suffixes)
+                  const cleanName = (name) => {
+                    if (!name) return "";
+                    return name
+                      .replace(/บ\.?|บจก\.?|บริษัท|หสน\.?|หจก\.?|จก\.?|\(มหาชน\)/g, "")
+                      .replace(/\s+/g, "")
+                      .trim();
+                  };
+                  
+                  const targetCoreName = cleanName(officialName);
+                  
+                  // Find all companies that should be aggregated into this row
+                  const matchingCompanyIds = companies
+                    .filter(comp => {
+                      if (comp.code === code) return true;
+                      if (!comp.code || comp.code === "-") {
+                        const compCoreName = cleanName(comp.name);
+                        // If core names are very similar, or one contains the other (above length 5)
+                        if (targetCoreName && compCoreName) {
+                          if (compCoreName === targetCoreName) return true;
+                          if (compCoreName.includes(targetCoreName) && targetCoreName.length > 5) return true;
+                          if (targetCoreName.includes(compCoreName) && compCoreName.length > 5) return true;
+                        }
+                      }
+                      return false;
+                    })
+                    .map(comp => comp.id);
+
+                  const companyRecords = stats.filter(r => matchingCompanyIds.includes(r.companyId));
+                  const count = companyRecords.reduce((sum, r) => sum + (Number(r.count) || 0), 0);
+                  const amount = companyRecords.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+                  
+                  const latestRecordWithMachineStatus = [...companyRecords]
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))
+                    .find(r => r.machineRemaining !== null || r.machineAccumulated !== null);
+                    
+                  const remaining = latestRecordWithMachineStatus?.machineRemaining;
+                  const accumulated = latestRecordWithMachineStatus?.machineAccumulated;
+                  
+                  return (
+                    <tr key={code}>
+                      <td style={{ fontSize: '0.85rem' }}>{code}</td>
+                      <td style={{ textAlign: 'left', fontSize: officialName.length > 30 ? '0.75rem' : '0.85rem', paddingLeft: '8px', whiteSpace: 'nowrap' }}>{officialName || '-'}</td>
+                      <td className="num">{count > 0 ? count.toLocaleString() : ''}</td>
+                      <td className="num">{amount > 0 ? amount.toLocaleString(undefined, { minimumFractionDigits: 2 }) : ''}</td>
+                      <td className="num" style={{ fontSize: '0.85rem' }}>{remaining != null ? remaining.toLocaleString(undefined, { minimumFractionDigits: 2 }) : ''}</td>
+                      <td className="num" style={{ fontSize: '0.85rem' }}>{accumulated != null ? accumulated.toLocaleString(undefined, { minimumFractionDigits: 2 }) : ''}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr style={{ fontWeight: 'bold' }}>
+                  <td colSpan={2} style={{ textAlign: 'right', paddingRight: '10px' }}>รวมทั้งสิ้น</td>
+                  <td className="num">{
+                    [
+                      'H0032', 'H0128', 'H0130', 'H0143', 'H0148', 'H0223', 'H0241', 'H0250', 'H0267', 'H0298', 'H0308',
+                      'P0403', 'P0574', 'P0617', 'P0727', 'P1074', 'P3028', 'P3064', 'P3088', 'P3111', 'P3114', 'P3115',
+                      'N20011', 'N20028', 'N20032', 'N40011', 'N40016', 'N40019', 'N40021', 'N40022', 'N40027'
+                    ].reduce((sum, code) => {
+                      const officialName = companies.find(c => c.code === code)?.name || "";
+                      const cleanName = (name) => {
+                        if (!name) return "";
+                        return name.replace(/บ\.?|บจก\.?|บริษัท|หสน\.?|หจก\.?|จก\.?|\(มหาชน\)/g, "").replace(/\s+/g, "").trim();
+                      };
+                      const targetCoreName = cleanName(officialName);
+                      
+                      const matchingCompanyIds = companies
+                        .filter(comp => {
+                          if (comp.code === code) return true;
+                          if (!comp.code || comp.code === "-") {
+                            const compCoreName = cleanName(comp.name);
+                            if (targetCoreName && compCoreName && (compCoreName === targetCoreName || (compCoreName.includes(targetCoreName) && targetCoreName.length > 5))) return true;
+                          }
+                          return false;
+                        })
+                        .map(comp => comp.id);
+                      
+                      return sum + stats.filter(r => matchingCompanyIds.includes(r.companyId)).reduce((s, r) => s + (Number(r.count) || 0), 0);
+                    }, 0).toLocaleString()
+                  }</td>
+                  <td className="num">{
+                    [
+                      'H0032', 'H0128', 'H0130', 'H0143', 'H0148', 'H0223', 'H0241', 'H0250', 'H0267', 'H0298', 'H0308',
+                      'P0403', 'P0574', 'P0617', 'P0727', 'P1074', 'P3028', 'P3064', 'P3088', 'P3111', 'P3114', 'P3115',
+                      'N20011', 'N20028', 'N20032', 'N40011', 'N40016', 'N40019', 'N40021', 'N40022', 'N40027'
+                    ].reduce((sum, code) => {
+                      const officialName = companies.find(c => c.code === code)?.name || "";
+                      const cleanName = (name) => {
+                        if (!name) return "";
+                        return name.replace(/บ\.?|บจก\.?|บริษัท|หสน\.?|หจก\.?|จก\.?|\(มหาชน\)/g, "").replace(/\s+/g, "").trim();
+                      };
+                      const targetCoreName = cleanName(officialName);
+                      const matchingCompanyIds = companies
+                        .filter(comp => {
+                          if (comp.code === code) return true;
+                          if (!comp.code || comp.code === "-") {
+                            const compCoreName = cleanName(comp.name);
+                            if (targetCoreName && compCoreName && (compCoreName === targetCoreName || (compCoreName.includes(targetCoreName) && targetCoreName.length > 5))) return true;
+                          }
+                          return false;
+                        })
+                        .map(comp => comp.id);
+                      
+                      return sum + stats.filter(r => matchingCompanyIds.includes(r.companyId)).reduce((s, r) => s + (Number(r.amount) || 0), 0);
+                    }, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })
+                  }</td>
+                  <td colSpan={2}></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
+
         {reportType === 'machine' && (
           <div className="print-machine portrait">
             <header className="report-header" style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
@@ -837,6 +1281,53 @@ const BackupManager = () => {
   );
 };
 
+const LogoManager = () => {
+  const { reportLogo, setReportLogo } = useApp();
+
+  return (
+    <div className="glass-card mt-8">
+      <h2 style={{ marginBottom: '1rem' }}>โลโก้รายงาน</h2>
+      <p className="text-muted mb-4">อัปโหลดรูปภาพโลโก้ไปรษณีย์ไทยเพื่อแสดงในรายงาน (แนะนำไฟล์ PNG ที่มีพื้นหลังโปร่งใส)</p>
+      <div className="logo-upload-container" style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+        {reportLogo && (
+          <div className="logo-preview" style={{ position: 'relative', background: 'white', padding: '10px', borderRadius: '8px' }}>
+            <img src={reportLogo} alt="Report Logo Preview" style={{ height: '60px', objectFit: 'contain' }} />
+            <button 
+              className="btn-icon" 
+              onClick={() => setReportLogo(null)} 
+              style={{ position: 'absolute', top: '-10px', right: '-10px', background: '#ef4444', borderRadius: '50%', color: 'white', border: 'none', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              title="ลบโลโก้"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        )}
+        <div className="upload-controls">
+          <input 
+            type="file" 
+            id="logo-input" 
+            accept="image/*" 
+            onChange={(e) => {
+              const file = e.target.files[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  setReportLogo(reader.result);
+                };
+                reader.readAsDataURL(file);
+              }
+            }} 
+            style={{ display: 'none' }}
+          />
+          <button className="btn btn-secondary" onClick={() => document.getElementById('logo-input').click()} style={{ border: '1px solid var(--glass-border)' }}>
+            <Upload size={18} /> {reportLogo ? 'เปลี่ยนรูปภาพโลโก้' : 'เลือกรูปภาพโลโก้'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Navigation = ({ view, setView }) => (
   <nav className="no-print side-nav">
     <div className="logo">POST STATS</div>
@@ -854,7 +1345,13 @@ const Navigation = ({ view, setView }) => (
 );
 
 const History = () => {
-  const { records, services, companies, deleteSingleRecord, addRecord } = useApp();
+  const { 
+    services, 
+    companies, 
+    records, 
+    deleteSingleRecord, 
+    addRecord 
+  } = useApp();
   const [editingKey, setEditingKey] = useState(null);
   const [editData, setEditData] = useState({});
   
@@ -982,6 +1479,7 @@ const AppContent = () => {
             <h1 style={{ marginBottom: '2rem' }}>การตั้งค่า</h1>
             <ServicesManager />
             <CompaniesManager />
+            <LogoManager />
             <BackupManager />
           </div>
         )}

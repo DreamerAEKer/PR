@@ -36,22 +36,27 @@ export const AppProvider = ({ children }) => {
 
   const [services, setServices] = useState(() => {
     const defaultServices = [
-      { id: '1', name: 'รายได้ไปรษณีย์ภัณฑ์ในประเทศ-ธรรมดา', code: '41010401', category: 'domestic', reportGroupId: '1' },
-      { id: '2', name: 'รายได้ไปรษณีย์ภัณฑ์ในประเทศ-รับรอง', code: '41010411', category: 'domestic', reportGroupId: '2' },
-      { id: '3', name: 'รายได้ไปรษณีย์ภัณฑ์ในประเทศ-ลงทะเบียน', code: '41010421', category: 'domestic', reportGroupId: '3' },
-      { id: '15', name: 'บริการ eCo-Post', code: 'ECO01', category: 'domestic', reportGroupId: '3' },
-      { id: '4', name: 'รายได้ไปรษณีย์ภัณฑ์ในประเทศ-รับประกัน', code: '41010431', category: 'domestic', reportGroupId: '4' },
-      { id: '5', name: 'รายได้ไปรษณีย์ภัณฑ์ระหว่างประเทศ-ธรรมดา', code: '41010501', category: 'international', reportGroupId: '5' },
-      { id: '6', name: 'รายได้ไปรษณีย์ภัณฑ์ระหว่างประเทศ-ลงทะเบียน', code: '41010511', category: 'international', reportGroupId: '6' },
-      { id: '16', name: 'บริการ ePacket', code: 'EPK01', category: 'international', reportGroupId: '6' },
-      { id: '7', name: 'รายได้ไปรษณีย์ภัณฑ์ระหว่างประเทศ-รับประกัน', code: '41010521', category: 'international', reportGroupId: '7' },
+      { id: '1', name: 'รายได้ไปรษณียภัณฑ์ในประเทศ-ธรรมดา', code: '41010401', category: 'domestic', reportGroupId: '1' },
+      { id: '2', name: 'รายได้ไปรษณียภัณฑ์ในประเทศ-รับรอง', code: '41010411', category: 'domestic', reportGroupId: '2' },
+      { id: '3', name: 'รายได้ไปรษณียภัณฑ์ในประเทศ-ลงทะเบียน', code: '41010421', category: 'domestic', reportGroupId: '3' },
+      { id: '4', name: 'รายได้ไปรษณียภัณฑ์ในประเทศ-รับประกัน', code: '41010431', category: 'domestic', reportGroupId: '4' },
+      { id: '5', name: 'รายได้ไปรษณียภัณฑ์ระหว่างประเทศ-ธรรมดา', code: '41010501', category: 'international', reportGroupId: '5' },
+      { id: '6', name: 'รายได้ไปรษณียภัณฑ์ระหว่างประเทศ-ลงทะเบียน', code: '41010511', category: 'international', reportGroupId: '6' },
+      { id: '7', name: 'รายได้ไปรษณียภัณฑ์ระหว่างประเทศ-รับประกัน', code: '41010521', category: 'international', reportGroupId: '7' },
       { id: '8', name: 'รายได้พัสดุไปรษณีย์ภัณฑ์ในประเทศ-ธรรมดา', code: '41010601', category: 'domestic', reportGroupId: '8' },
       { id: '9', name: 'รายได้พัสดุไปรษณีย์ภัณฑ์ในประเทศ-รับประกัน', code: '41010611', category: 'domestic', reportGroupId: '9' },
       { id: '10', name: 'รายได้พัสดุไปรษณีย์ภัณฑ์ระหว่างประเทศ-ธรรมดา', code: '41010701', category: 'international', reportGroupId: '10' },
       { id: '11', name: 'รายได้พัสดุไปรษณีย์ภัณฑ์ระหว่างประเทศ-รับประกัน', code: '41010711', category: 'international', reportGroupId: '11' },
       { id: '12', name: 'รายได้ไปรษณีย์ด่วนพิเศษในประเทศ', code: '41010801', category: 'domestic', reportGroupId: '12' },
       { id: '13', name: 'รายได้ไปรษณีย์ด่วนพิเศษระหว่างประเทศ', code: '41010901', category: 'international', reportGroupId: '13' },
-      { id: '14', name: 'รายได้บริการธุรกิจตอบรับ-ในประเทศ', code: '41012101', category: 'domestic', reportGroupId: '41012101' }
+      { id: '14', name: 'รายได้บริการธุรกิจตอบรับ-ในประเทศ', code: '41012101', category: 'domestic', reportGroupId: '14' },
+      { id: '17', name: 'สิ่งพิมพ์ธรรมดาในประเทศ', code: '41010402', category: 'domestic', reportGroupId: '1' },
+      { id: '18', name: 'ไปรษณีย์บัตรในประเทศ', code: '41010403', category: 'domestic', reportGroupId: '1' },
+      { id: '19', name: 'สิ่งพิมพ์ธรรมดาต่างประเทศ', code: '41010502', category: 'international', reportGroupId: '5' },
+      { id: '20', name: 'ไปรษณีย์บัตรต่างประเทศ', code: '41010503', category: 'international', reportGroupId: '5' },
+      { id: '21', name: 'พัสดุย่อย', code: '41010721', category: 'international', reportGroupId: '10' },
+      { id: '15', name: 'บริการ eCo-Post', code: 'ECO01', category: 'domestic', reportGroupId: '3' },
+      { id: '16', name: 'บริการ ePacket', code: 'EPK01', category: 'international', reportGroupId: '6' }
     ];
 
     const saved = localStorage.getItem('postage_services');
@@ -79,9 +84,37 @@ export const AppProvider = ({ children }) => {
   const [companies, setCompanies] = useState(() => {
     const saved = localStorage.getItem('postage_companies');
     return saved ? JSON.parse(saved) : [
-      { id: 'c1', name: 'บริษัท ไทยเศรษฐกิจประกันภัย', code: 'H0100' },
-      { id: 'c2', name: 'บริษัท เอ็นเซอร์ไพรส์', code: 'H0128' },
-      { id: 'c3', name: 'บริษัท ไปรษณีย์ไทย จำกัด', code: 'H0130' }
+      { id: 'h0032', name: 'บ.เอเชี่ยนฮอนด้าคอมเมอร์ส จก.', code: 'H0032' },
+      { id: 'h0128', name: 'บ.ไทยเศรษฐกิจประกันภัย จก.(มหาชน)', code: 'H0128' },
+      { id: 'h0130', name: 'บ.สิทธิผล 1919 จก.', code: 'H0130' },
+      { id: 'h0143', name: 'บ.เอสเอวายเอ(ประเทศไทย)จำกัด', code: 'H0143' },
+      { id: 'h0148', name: 'ราชกรีฑาสโมสร', code: 'H0148' },
+      { id: 'h0223', name: 'บ.สรรพสินค้าเซ็นทรัล จก.', code: 'H0223' },
+      { id: 'h0241', name: 'สำนักงานบริการโทรศัพท์สุรวงศ์', code: 'H0241' },
+      { id: 'h0250', name: 'บ.โรงแรมรอยัลออคิด(ปทท) จก.(มหาชน)', code: 'H0250' },
+      { id: 'h0267', name: 'หสน.ดัลลัส แอนด์ กิ๊บบินส์', code: 'H0267' },
+      { id: 'h0298', name: 'ธ.มิตซูโฮคอร์ปอเรต จก. สาขากรุงเทพฯ', code: 'H0298' },
+      { id: 'h0308', name: 'บ.ซิงเกอร์ประเทศไทย จำกัด', code: 'H0308' },
+      { id: 'p0403', name: 'บ.พาราวันเซอร์วิส จก.', code: 'P0403' },
+      { id: 'p0574', name: 'ธนาคารสากลพาณิชย์แห่งประเทศจีน', code: 'P0574' },
+      { id: 'p0617', name: 'บ.อเวนติส ฟาร์มา จก.', code: 'P0617' },
+      { id: 'p0727', name: 'บ.ดูปองต์(ประเทศไทย)จก.', code: 'P0727' },
+      { id: 'p1074', name: 'บ.พรีเชียส ชิปปิ้ง จก.(มหาชน)', code: 'P1074' },
+      { id: 'p3028', name: 'สถานทูตอเมริกา', code: 'P3028' },
+      { id: 'p3064', name: 'สถานเอกอัครราชทูตแคนาดา', code: 'P3064' },
+      { id: 'p3088', name: 'สถานเอกอัครราชทูตสวิสเซอร์แลนด์', code: 'P3088' },
+      { id: 'p3111', name: 'บ.นิวแฮมพ์เชียร์ อินชัวรันส์ จก.', code: 'P3111' },
+      { id: 'p3114', name: 'บ.มิตรแท้ประกันภัย จำกัด', code: 'P3114' },
+      { id: 'p3115', name: 'บ.ฮี โด ชู (ไทยแลนด์) จก.', code: 'P3115' },
+      { id: 'n20011', name: 'บ.ล็อกเล่ย์ (กรุงเทพฯ) จก.', code: 'N20011' },
+      { id: 'n20028', name: 'บริษัท ไบเออร์ไทย จำกัด', code: 'N20028' },
+      { id: 'n20032', name: 'สำนักกฎหมายดำเนินสมเกียรติและบุญมา', code: 'N20032' },
+      { id: 'n40011', name: 'บ.บริหารสินทรัพย์กรุงเทพพาณิชย์การ จก.', code: 'N40011' },
+      { id: 'n40016', name: 'บริษัท ฟิลิปประกันชีวิต จำกัด (มหาชน)', code: 'N40016' },
+      { id: 'n40019', name: 'Sumitomo Corporation', code: 'N40019' },
+      { id: 'n40021', name: 'ธ.แห่งอเมริกา เนชั่นแนล แอสโซซิเอชั่น', code: 'N40021' },
+      { id: 'n40022', name: 'เมอร์เซเดส-เบนซ์', code: 'N40022' },
+      { id: 'n40027', name: 'สถานทูตเยอรมนี', code: 'N40027' }
     ];
   });
 
@@ -89,6 +122,71 @@ export const AppProvider = ({ children }) => {
     const saved = localStorage.getItem('postage_records');
     return saved ? JSON.parse(saved) : [];
   });
+
+  const [reportLogo, setReportLogo] = useState(() => {
+    return localStorage.getItem('postage_report_logo') || null;
+  });
+
+  // Sync / Merge 31 standard companies
+  useEffect(() => {
+    const standardCompanies = [
+      { id: 'h0032', name: 'บ.เอเชี่ยนฮอนด้าคอมเมอร์ส จก.', code: 'H0032' },
+      { id: 'h0128', name: 'บ.ไทยเศรษฐกิจประกันภัย จก.(มหาชน)', code: 'H0128' },
+      { id: 'h0130', name: 'บ.สิทธิผล 1919 จก.', code: 'H0130' },
+      { id: 'h0143', name: 'บ.เอสเอวายเอ(ประเทศไทย)จำกัด', code: 'H0143' },
+      { id: 'h0148', name: 'ราชกรีฑาสโมสร', code: 'H0148' },
+      { id: 'h0223', name: 'บ.สรรพสินค้าเซ็นทรัล จก.', code: 'H0223' },
+      { id: 'h0241', name: 'สำนักงานบริการโทรศัพท์สุรวงศ์', code: 'H0241' },
+      { id: 'h0250', name: 'บ.โรงแรมรอยัลออคิด(ปทท) จก.(มหาชน)', code: 'H0250' },
+      { id: 'h0267', name: 'หสน.ดัลลัส แอนด์ กิ๊บบินส์', code: 'H0267' },
+      { id: 'h0298', name: 'ธ.มิตซูโฮคอร์ปอเรต จก. สาขากรุงเทพฯ', code: 'H0298' },
+      { id: 'h0308', name: 'บ.ซิงเกอร์ประเทศไทย จำกัด', code: 'H0308' },
+      { id: 'p0403', name: 'บ.พาราวันเซอร์วิส จก.', code: 'P0403' },
+      { id: 'p0574', name: 'ธนาคารสากลพาณิชย์แห่งประเทศจีน', code: 'P0574' },
+      { id: 'p0617', name: 'บ.อเวนติส ฟาร์มา จก.', code: 'P0617' },
+      { id: 'p0727', name: 'บ.ดูปองต์(ประเทศไทย)จก.', code: 'P0727' },
+      { id: 'p1074', name: 'บ.พรีเชียส ชิปปิ้ง จก.(มหาชน)', code: 'P1074' },
+      { id: 'p3028', name: 'สถานทูตอเมริกา', code: 'P3028' },
+      { id: 'p3064', name: 'สถานเอกอัครราชทูตแคนาดา', code: 'P3064' },
+      { id: 'p3088', name: 'สถานเอกอัครราชทูตสวิสเซอร์แลนด์', code: 'P3088' },
+      { id: 'p3111', name: 'บ.นิวแฮมพ์เชียร์ อินชัวรันส์ จก.', code: 'P3111' },
+      { id: 'p3114', name: 'บ.มิตรแท้ประกันภัย จำกัด', code: 'P3114' },
+      { id: 'p3115', name: 'บ.ฮี โด ชู (ไทยแลนด์) จก.', code: 'P3115' },
+      { id: 'n20011', name: 'บ.ล็อกเล่ย์ (กรุงเทพฯ) จก.', code: 'N20011' },
+      { id: 'n20028', name: 'บริษัท ไบเออร์ไทย จำกัด', code: 'N20028' },
+      { id: 'n20032', name: 'สำนักกฎหมายดำเนินสมเกียรติและบุญมา', code: 'N20032' },
+      { id: 'n40011', name: 'บ.บริหารสินทรัพย์กรุงเทพพาณิชย์การ จก.', code: 'N40011' },
+      { id: 'n40016', name: 'บริษัท ฟิลิปประกันชีวิต จำกัด (มหาชน)', code: 'N40016' },
+      { id: 'n40019', name: 'Sumitomo Corporation', code: 'N40019' },
+      { id: 'n40021', name: 'ธ.แห่งอเมริกา เนชั่นแนล แอสโซซิเอชั่น', code: 'N40021' },
+      { id: 'n40022', name: 'เมอร์เซเดส-เบนซ์', code: 'N40022' },
+      { id: 'n40027', name: 'สถานทูตเยอรมนี', code: 'N40027' }
+    ];
+
+    setCompanies(prev => {
+      const merged = [...prev];
+      let changed = false;
+      standardCompanies.forEach(sc => {
+        if (!merged.find(c => c.code === sc.code)) {
+          merged.push(sc);
+          changed = true;
+        }
+      });
+      return changed ? merged : prev;
+    });
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (reportLogo) {
+        localStorage.setItem('postage_report_logo', reportLogo);
+      } else {
+        localStorage.removeItem('postage_report_logo');
+      }
+    } catch (e) {
+      console.error('Failed to save logo:', e);
+    }
+  }, [reportLogo]);
 
   useEffect(() => {
     try {
@@ -141,6 +239,10 @@ export const AppProvider = ({ children }) => {
 
   const updateService = (id, updated) => {
     setServices(prev => prev.map(s => s.id === id ? { ...s, ...updated } : s));
+  };
+
+  const updateCompany = (id, updated) => {
+    setCompanies(prev => prev.map(c => c.id === id ? { ...c, ...updated } : c));
   };
 
   const deleteSingleRecord = (serviceId, date, companyId, timestamp) => {
@@ -218,12 +320,12 @@ export const AppProvider = ({ children }) => {
   };
 
   return (
-    <AppContext.Provider value={{
-      services, setServices,
-      companies, setCompanies,
-      records, setRecords,
-      addRecord, deleteRecords, updateService, deleteSingleRecord,
-      exportData, importData
+    <AppContext.Provider value={{ 
+      services, setServices, updateService,
+      companies, setCompanies, updateCompany,
+      records, setRecords, addRecord, deleteRecords, deleteSingleRecord,
+      exportData, importData,
+      reportLogo, setReportLogo
     }}>
       {children}
     </AppContext.Provider>
