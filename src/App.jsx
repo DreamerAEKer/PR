@@ -3,7 +3,7 @@ import { AppProvider, useApp } from './context/AppContext';
 import { LayoutDashboard, Settings, FileText, PlusCircle, Printer, Trash2, ChevronLeft, ChevronRight, Save, Edit2, Check, X, Download, Upload, ChevronUp, ChevronDown } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, subDays, isWeekend } from 'date-fns';
 import { th } from 'date-fns/locale';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import './App.css';
 
 const THAI_HOLIDAYS_2026 = [
@@ -280,86 +280,232 @@ const CompaniesManager = () => {
 };
 
 const Dashboard = () => {
-  const { records, services } = useApp();
-  
-  const stats = useMemo(() => {
-    const totalCount = records.reduce((sum, r) => sum + (Number(r.count) || 0), 0);
-    const totalAmount = records.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
-    
-    // Group by service for chart
-    const serviceData = services.map(s => ({
-      name: s.name.substring(0, 15) + '...',
-      value: records.filter(r => r.serviceId === s.id).reduce((sum, r) => sum + (Number(r.amount) || 0), 0)
-    })).filter(d => d.value > 0);
+  const { records, services, companies } = useApp();
+  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
+  const [selectedCompany, setSelectedCompany] = useState('all');
 
-    return { totalCount, totalAmount, serviceData };
-  }, [records, services]);
+  const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#6366f1', '#f43f5e', '#8b5cf6', '#06b6d4', '#475569'];
+
+  const stats = useMemo(() => {
+    // 1. Filter records based on UI selections
+    const filtered = (records || []).filter(r => {
+      const matchMonth = r.date && r.date.startsWith(selectedMonth);
+      const matchCompany = selectedCompany === 'all' || r.companyId === selectedCompany;
+      return matchMonth && matchCompany;
+    });
+
+    // 2. Base Totals
+    const totalCount = filtered.reduce((sum, r) => sum + (Number(r.count) || 0), 0);
+    const totalAmount = filtered.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+
+    // 3. Top Service
+    const serviceMap = {};
+    filtered.forEach(r => {
+      serviceMap[r.serviceId] = (serviceMap[r.serviceId] || 0) + Number(r.amount);
+    });
+    const topServiceId = Object.keys(serviceMap).sort((a, b) => serviceMap[b] - serviceMap[a])[0];
+    const topServiceName = services.find(s => s.id === topServiceId)?.name || '-';
+
+    // 4. Top Company
+    const companyMap = {};
+    filtered.forEach(r => {
+      companyMap[r.companyId] = (companyMap[r.companyId] || 0) + Number(r.amount);
+    });
+    const topCompanyId = Object.keys(companyMap).sort((a, b) => companyMap[b] - companyMap[a])[0];
+    const topCompanyName = companies.find(c => c.id === topCompanyId)?.name || '-';
+
+    // 5. Daily Trend Data (Line Chart)
+    const [year, month] = selectedMonth.split('-').map(Number);
+    const dateRange = eachDayOfInterval({ 
+      start: startOfMonth(new Date(year, month - 1)), 
+      end: endOfMonth(new Date(year, month - 1)) 
+    });
+    
+    const dailyData = dateRange.map(day => {
+      const dStr = format(day, 'yyyy-MM-dd');
+      const dailyTotal = filtered.filter(r => r.date === dStr).reduce((sum, r) => sum + Number(r.amount), 0);
+      return {
+        date: format(day, 'd'),
+        amount: dailyTotal
+      };
+    }).filter(d => d.amount > 0 || Number(d.date) <= new Date().getDate() || selectedMonth < format(new Date(), 'yyyy-MM'));
+
+    // 6. Service Breakdown (Pie/Bar Chart)
+    const serviceDistribution = services.map(s => {
+      const amount = filtered.filter(r => r.serviceId === s.id).reduce((sum, r) => sum + Number(r.amount), 0);
+      return {
+        name: s.name.length > 20 ? s.name.substring(0, 20) + '...' : s.name,
+        fullName: s.name,
+        value: amount
+      };
+    }).filter(d => d.value > 0).sort((a,b) => b.value - a.value);
+
+    return { 
+      totalCount, 
+      totalAmount, 
+      topServiceName, 
+      topCompanyName, 
+      dailyData, 
+      serviceDistribution,
+      filteredCount: filtered.length
+    };
+  }, [records, services, companies, selectedMonth, selectedCompany]);
 
   return (
     <div className="fade-in">
-      <h1 style={{ marginBottom: '2rem' }}>แดชบอร์ด</h1>
-      <div className="stats-grid">
-        <div className="glass-card stat-card">
+      <div className="flex-between mb-8">
+        <h1 style={{ margin: 0 }}>แดชบอร์ด</h1>
+        <div className="flex-form-controls">
+          <select 
+            className="input-select" 
+            value={selectedCompany} 
+            onChange={e => setSelectedCompany(e.target.value)}
+          >
+            <option value="all">ทุกบริษัท</option>
+            {companies
+              .filter(c => records.some(r => r.companyId === c.id))
+              .sort((a,b) => (a.order || 0) - (b.order || 0))
+              .map(c => <option key={c.id} value={c.id}>{c.name}</option>)
+            }
+          </select>
+          <input 
+            type="month" 
+            className="input-select" 
+            value={selectedMonth} 
+            onChange={e => setSelectedMonth(e.target.value)} 
+          />
+        </div>
+      </div>
+
+      <div className="stats-grid-4">
+        <div className="glass-card stat-card-mini">
           <span className="label">จำนวนชิ้นรวม</span>
           <span className="value">{stats.totalCount.toLocaleString()}</span>
         </div>
-        <div className="glass-card stat-card primary">
+        <div className="glass-card stat-card-mini primary">
           <span className="label">รายได้รวม</span>
           <span className="value">฿{stats.totalAmount.toLocaleString()}</span>
         </div>
+        <div className="glass-card stat-card-mini success">
+          <span className="label">บริการยอดนิยม</span>
+          <span className="value-small">{stats.topServiceName}</span>
+        </div>
+        <div className="glass-card stat-card-mini info">
+          <span className="label">ลูกค้าใช้บริการสูงสุด</span>
+          <span className="value-small">{stats.topCompanyName}</span>
+        </div>
       </div>
       
-      <div className="glass-card mt-8">
-        <h2 style={{ marginBottom: '1.5rem' }}>สัดส่วนรายได้แยกตามบริการ</h2>
-        <div style={{ height: 300 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={stats.serviceData}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
-              <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} />
-              <YAxis stroke="var(--text-muted)" fontSize={12} />
-              <Tooltip 
-                contentStyle={{ background: 'var(--card-bg)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
-                itemStyle={{ color: 'var(--text-main)' }}
-              />
-              <Bar dataKey="value" fill="var(--primary)" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+      <div className="dashboard-grid-charts mt-8">
+        {/* Daily Trend Line Chart */}
+        <div className="glass-card chart-container">
+          <h2 className="mb-6">แนวโน้มรายได้รายวัน</h2>
+          <div style={{ height: 320 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={stats.dailyData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="date" stroke="var(--text-muted)" fontSize={11} label={{ value: 'วันที่', position: 'insideBottom', offset: -5, fill: 'var(--text-muted)', fontSize: 10 }} />
+                <YAxis stroke="var(--text-muted)" fontSize={11} />
+                <Tooltip 
+                  contentStyle={{ background: 'var(--card-bg)', border: '1px solid var(--glass-border)', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
+                  itemStyle={{ color: 'var(--primary)', fontWeight: 'bold' }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="amount" 
+                  stroke="var(--primary)" 
+                  strokeWidth={3} 
+                  dot={{ r: 4, fill: 'var(--primary)' }} 
+                  activeDot={{ r: 6, strokeWidth: 0 }} 
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Service Distribution Pie Chart */}
+        <div className="glass-card chart-container">
+          <h2 className="mb-6">สัดส่วนตามประเภทบริการ</h2>
+          <div style={{ height: 320 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={stats.serviceDistribution}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {stats.serviceDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(value) => [`฿${value.toLocaleString()}`, 'ยอดเงิน']}
+                  contentStyle={{ background: 'var(--card-bg)', border: '1px solid var(--glass-border)', borderRadius: '12px' }}
+                />
+                <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="pie-center-text">
+                  รายได้
+                </text>
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
       <div className="glass-card mt-8">
-        <h2 style={{ marginBottom: '1.5rem' }}>สรุปข้อมูลจริงรายบริการ</h2>
+        <h2 className="mb-6">สรุปข้อมูลทางเทคนิค (ตามเงื่อนไขที่เลือก)</h2>
         <div className="scroll-x">
           <table className="grid-entry-table">
             <thead>
               <tr>
-                <th>บริการ</th>
+                <th style={{ textAlign: 'left' }}>บริการ</th>
                 <th>รหัส</th>
                 <th>จำนวน (ชิ้น)</th>
                 <th>ยอดเงิน (฿)</th>
+                <th>สัดส่วน (%)</th>
               </tr>
             </thead>
             <tbody>
               {services.map(s => {
-                const serviceRecords = records.filter(r => r.serviceId === s.id);
-                const count = serviceRecords.reduce((sum, r) => sum + (Number(r.count) || 0), 0);
-                const amount = serviceRecords.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+                const count = records
+                  .filter(r => {
+                    const matchMonth = r.date && r.date.startsWith(selectedMonth);
+                    const matchCompany = selectedCompany === 'all' || r.companyId === selectedCompany;
+                    return matchMonth && matchCompany && r.serviceId === s.id;
+                  })
+                  .reduce((sum, r) => sum + (Number(r.count) || 0), 0);
+                  
+                const amount = records
+                  .filter(r => {
+                    const matchMonth = r.date && r.date.startsWith(selectedMonth);
+                    const matchCompany = selectedCompany === 'all' || r.companyId === selectedCompany;
+                    return matchMonth && matchCompany && r.serviceId === s.id;
+                  })
+                  .reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+                  
                 if (count === 0 && amount === 0) return null;
+                const percentage = stats.totalAmount > 0 ? (amount / stats.totalAmount) * 100 : 0;
+                
                 return (
                   <tr key={s.id}>
                     <td style={{ textAlign: 'left' }}>{s.name}</td>
                     <td>{s.code}</td>
                     <td>{count.toLocaleString()}</td>
                     <td className="num">{amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                    <td>{percentage.toFixed(1)}%</td>
                   </tr>
                 );
               })}
             </tbody>
             <tfoot>
               <tr style={{ fontWeight: 'bold' }}>
-                <td colSpan={2}>รวมทั้งหมด</td>
+                <td colSpan={2}>รวมทั้งหมด (เฉพาะที่เลือก)</td>
                 <td>{stats.totalCount.toLocaleString()}</td>
                 <td className="num">฿{stats.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                <td>100%</td>
               </tr>
             </tfoot>
           </table>
@@ -670,7 +816,7 @@ const Reports = () => {
     const monthStr = safeFormat(reportMonth, 'yyyy-MM');
     const filtered = (records || []).filter(r => r && r.date && r.date.startsWith(monthStr));
     
-    if (['company', 'company_v2', 'company_summary'].includes(reportType)) {
+    if (['company_v2', 'company_summary'].includes(reportType)) {
       return filtered.filter(r => r.companyId === selectedCompany);
     }
     return filtered;
@@ -725,19 +871,18 @@ const Reports = () => {
         <h1>รายงาน</h1>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <select className="input-select" value={reportType} onChange={e => setReportType(e.target.value)}>
-            <option value="pn3">รายได้ส่ง ปน.3</option>
-            <option value="pn3_v2">รายได้ส่ง ปน.3 Ver 2</option>
-            <option value="admin">ส่งธุรการ</option>
-            <option value="admin_v2">ส่งธุรการ Ver 2</option>
-            <option value="company">รายเดือนแยกบริษัท</option>
+            <option value="pn3_v2">รายได้ส่ง ปน.3</option>
+            <option value="admin_v2">ส่งธุรการ</option>
             <option value="company_v2">รายงานแยกบริษัท (แบบละเอียด)</option>
             <option value="company_summary">สรุปรายเดือนแยกบริษัท</option>
-            <option value="machine">สรุปเครื่อง (SUMMARY MACHINE)</option>
-            <option value="machine_v2">สรุปเครื่องประทับ Ver 2</option>
+            <option value="machine_v2">สรุปเครื่องประทับ</option>
           </select>
-          {['company', 'company_v2', 'company_summary'].includes(reportType) && (
+          {['company_v2', 'company_summary'].includes(reportType) && (
             <select className="input-select" value={selectedCompany} onChange={e => setSelectedCompany(e.target.value)}>
-              {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {companies
+                .filter(c => records.some(r => r.companyId === c.id))
+                .map(c => <option key={c.id} value={c.id}>{c.name}</option>)
+              }
             </select>
           )}
           <div className="month-picker">
@@ -1723,6 +1868,7 @@ const History = () => {
           >
             <option value="all">แสดงทั้งหมด</option>
             {companies
+              .filter(c => records.some(r => r.companyId === c.id))
               .sort((a,b) => (a.order || 0) - (b.order || 0))
               .map(c => <option key={c.id} value={c.id}>{c.name}</option>)
             }
