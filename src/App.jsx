@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
-import { LayoutDashboard, Settings, FileText, PlusCircle, Printer, Trash2, ChevronLeft, ChevronRight, Save, Edit2, Check, X, Download, Upload } from 'lucide-react';
+import { LayoutDashboard, Settings, FileText, PlusCircle, Printer, Trash2, ChevronLeft, ChevronRight, Save, Edit2, Check, X, Download, Upload, ChevronUp, ChevronDown } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, subDays, isWeekend } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
@@ -148,11 +148,29 @@ const CompaniesManager = () => {
 
   const add = () => {
     if (!newCompany.name) return;
-    setCompanies([...companies, { ...newCompany, id: Date.now().toString() }]);
+    const maxOrder = companies.length > 0 ? Math.max(...companies.map(c => c.order || 0)) : 0;
+    setCompanies([...companies, { ...newCompany, id: Date.now().toString(), order: maxOrder + 1 }]);
     setNewCompany({ name: '', code: '' });
   };
 
   const remove = (id) => setCompanies(companies.filter(c => c.id !== id));
+
+  const move = (id, direction) => {
+    const idx = companies.findIndex(c => c.id === id);
+    if (idx === -1) return;
+    if (direction === 'up' && idx === 0) return;
+    if (direction === 'down' && idx === companies.length - 1) return;
+
+    const newCompanies = [...companies].sort((a,b) => (a.order || 0) - (b.order || 0));
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    
+    // Swap orders
+    const temp = newCompanies[idx].order;
+    newCompanies[idx].order = newCompanies[targetIdx].order;
+    newCompanies[targetIdx].order = temp;
+
+    setCompanies(newCompanies);
+  };
 
   const startEdit = (c) => {
     setEditingId(c.id);
@@ -180,16 +198,12 @@ const CompaniesManager = () => {
               <th style={{ width: '40px' }}>แสดง</th>
               <th style={{ width: '100px' }}>รหัส</th>
               <th>ชื่อบริษัทลูกค้า</th>
+              <th style={{ width: '120px' }}>ลำดับ</th>
               <th style={{ width: '100px' }}>จัดการ</th>
             </tr>
           </thead>
           <tbody>
-            {[...companies].sort((a,b) => {
-              if (a.code && b.code) return a.code.localeCompare(b.code, 'en', { numeric: true });
-              if (a.code) return -1;
-              if (b.code) return 1;
-              return a.name.localeCompare(b.name, 'th');
-            }).map(c => (
+            {[...companies].sort((a,b) => (a.order || 0) - (b.order || 0)).map((c, idx) => (
               <tr key={c.id}>
                 {editingId === c.id ? (
                   <>
@@ -218,6 +232,10 @@ const CompaniesManager = () => {
                     </td>
                     <td>{c.code || '-'}</td>
                     <td style={{ textAlign: 'left' }}>{c.name}</td>
+                    <td className="actions" style={{ justifyContent: 'center' }}>
+                      <button className="btn-icon" onClick={() => move(c.id, 'up')} disabled={idx === 0} style={{ opacity: idx === 0 ? 0.2 : 1 }}><ChevronUp size={18} /></button>
+                      <button className="btn-icon" onClick={() => move(c.id, 'down')} disabled={idx === companies.length - 1} style={{ opacity: idx === companies.length - 1 ? 0.2 : 1 }}><ChevronDown size={18} /></button>
+                    </td>
                     <td className="actions">
                       <button className="btn-icon" onClick={() => startEdit(c)}><Edit2 size={16} /></button>
                       <button className="btn-icon" onClick={() => remove(c.id)}><Trash2 size={16} color="#ef4444" /></button>
@@ -461,12 +479,7 @@ const DataEntry = () => {
           <select className="input-select" value={selectedCompany} onChange={e => setSelectedCompany(e.target.value)}>
             {companies
               .filter(c => !c.isHidden)
-              .sort((a,b) => {
-                if (a.code && b.code) return a.code.localeCompare(b.code, 'en', { numeric: true });
-                if (a.code) return -1;
-                if (b.code) return 1;
-                return a.name.localeCompare(b.name, 'th');
-              })
+              .sort((a,b) => (a.order || 0) - (b.order || 0))
               .map(c => <option key={c.id} value={c.id}>{c.name} {c.code ? `(${c.code})` : ''}</option>)
             }
           </select>
@@ -1067,14 +1080,12 @@ const Reports = () => {
                 </tr>
               </thead>
               <tbody>
-                {[
-                  'H0032', 'H0128', 'H0130', 'H0143', 'H0148', 'H0223', 'H0241', 'H0250', 'H0267', 'H0298', 'H0308',
-                  'P0403', 'P0574', 'P0617', 'P0727', 'P1074', 'P3028', 'P3064', 'P3088', 'P3111', 'P3114', 'P3115',
-                  'N20011', 'N20028', 'N20032', 'N40011', 'N40016', 'N40019', 'N40021', 'N40022', 'N40027'
-                ].map((code) => {
-                  // Official company mapping
-                  const officialCompany = companies.find(comp => comp.code === code);
-                  const officialName = officialCompany?.name || '';
+                {companies
+                  .filter(c => !c.isHidden)
+                  .sort((a,b) => (a.order || 0) - (b.order || 0))
+                  .map((officialCompany) => {
+                  const code = officialCompany.code;
+                  const officialName = officialCompany.name || '';
                   
                   // Extract core name for fuzzy matching (removing common prefixes/suffixes)
                   const cleanName = (name) => {
@@ -1090,7 +1101,7 @@ const Reports = () => {
                   // Find all companies that should be aggregated into this row
                   const matchingCompanyIds = companies
                     .filter(comp => {
-                      if (comp.code === code) return true;
+                      if (comp.code === code && code) return true;
                       if (!comp.code || comp.code === "-") {
                         const compCoreName = cleanName(comp.name);
                         // If core names are very similar, or one contains the other (above length 5)
@@ -1116,8 +1127,8 @@ const Reports = () => {
                   const accumulated = latestRecordWithMachineStatus?.machineAccumulated;
                   
                   return (
-                    <tr key={code}>
-                      <td style={{ fontSize: '0.85rem' }}>{code}</td>
+                    <tr key={officialCompany.id}>
+                      <td style={{ fontSize: '0.85rem' }}>{code || '-'}</td>
                       <td style={{ textAlign: 'left', fontSize: officialName.length > 30 ? '0.75rem' : '0.85rem', paddingLeft: '8px', whiteSpace: 'nowrap' }}>{officialName || '-'}</td>
                       <td className="num">{count > 0 ? count.toLocaleString() : ''}</td>
                       <td className="num">{amount > 0 ? amount.toLocaleString(undefined, { minimumFractionDigits: 2 }) : ''}</td>
@@ -1131,57 +1142,55 @@ const Reports = () => {
                 <tr style={{ fontWeight: 'bold' }}>
                   <td colSpan={2} style={{ textAlign: 'right', paddingRight: '10px' }}>รวมทั้งสิ้น</td>
                   <td className="num">{
-                    [
-                      'H0032', 'H0128', 'H0130', 'H0143', 'H0148', 'H0223', 'H0241', 'H0250', 'H0267', 'H0298', 'H0308',
-                      'P0403', 'P0574', 'P0617', 'P0727', 'P1074', 'P3028', 'P3064', 'P3088', 'P3111', 'P3114', 'P3115',
-                      'N20011', 'N20028', 'N20032', 'N40011', 'N40016', 'N40019', 'N40021', 'N40022', 'N40027'
-                    ].reduce((sum, code) => {
-                      const officialName = companies.find(c => c.code === code)?.name || "";
-                      const cleanName = (name) => {
-                        if (!name) return "";
-                        return name.replace(/บ\.?|บจก\.?|บริษัท|หสน\.?|หจก\.?|จก\.?|\(มหาชน\)/g, "").replace(/\s+/g, "").trim();
-                      };
-                      const targetCoreName = cleanName(officialName);
-                      
-                      const matchingCompanyIds = companies
-                        .filter(comp => {
-                          if (comp.code === code) return true;
-                          if (!comp.code || comp.code === "-") {
-                            const compCoreName = cleanName(comp.name);
-                            if (targetCoreName && compCoreName && (compCoreName === targetCoreName || (compCoreName.includes(targetCoreName) && targetCoreName.length > 5))) return true;
-                          }
-                          return false;
-                        })
-                        .map(comp => comp.id);
-                      
-                      return sum + stats.filter(r => matchingCompanyIds.includes(r.companyId)).reduce((s, r) => s + (Number(r.count) || 0), 0);
-                    }, 0).toLocaleString()
+                    companies
+                      .filter(c => !c.isHidden)
+                      .reduce((sum, officialCompany) => {
+                        const code = officialCompany.code;
+                        const officialName = officialCompany.name || "";
+                        const cleanName = (name) => {
+                          if (!name) return "";
+                          return name.replace(/บ\.?|บจก\.?|บริษัท|หสน\.?|หจก\.?|จก\.?|\(มหาชน\)/g, "").replace(/\s+/g, "").trim();
+                        };
+                        const targetCoreName = cleanName(officialName);
+                        
+                        const matchingCompanyIds = companies
+                          .filter(comp => {
+                            if (comp.code === code && code) return true;
+                            if (!comp.code || comp.code === "-") {
+                              const compCoreName = cleanName(comp.name);
+                              if (targetCoreName && compCoreName && (compCoreName === targetCoreName || (compCoreName.includes(targetCoreName) && targetCoreName.length > 5))) return true;
+                            }
+                            return false;
+                          })
+                          .map(comp => comp.id);
+                        
+                        return sum + stats.filter(r => matchingCompanyIds.includes(r.companyId)).reduce((s, r) => s + (Number(r.count) || 0), 0);
+                      }, 0).toLocaleString()
                   }</td>
                   <td className="num">{
-                    [
-                      'H0032', 'H0128', 'H0130', 'H0143', 'H0148', 'H0223', 'H0241', 'H0250', 'H0267', 'H0298', 'H0308',
-                      'P0403', 'P0574', 'P0617', 'P0727', 'P1074', 'P3028', 'P3064', 'P3088', 'P3111', 'P3114', 'P3115',
-                      'N20011', 'N20028', 'N20032', 'N40011', 'N40016', 'N40019', 'N40021', 'N40022', 'N40027'
-                    ].reduce((sum, code) => {
-                      const officialName = companies.find(c => c.code === code)?.name || "";
-                      const cleanName = (name) => {
-                        if (!name) return "";
-                        return name.replace(/บ\.?|บจก\.?|บริษัท|หสน\.?|หจก\.?|จก\.?|\(มหาชน\)/g, "").replace(/\s+/g, "").trim();
-                      };
-                      const targetCoreName = cleanName(officialName);
-                      const matchingCompanyIds = companies
-                        .filter(comp => {
-                          if (comp.code === code) return true;
-                          if (!comp.code || comp.code === "-") {
-                            const compCoreName = cleanName(comp.name);
-                            if (targetCoreName && compCoreName && (compCoreName === targetCoreName || (compCoreName.includes(targetCoreName) && targetCoreName.length > 5))) return true;
-                          }
-                          return false;
-                        })
-                        .map(comp => comp.id);
-                      
-                      return sum + stats.filter(r => matchingCompanyIds.includes(r.companyId)).reduce((s, r) => s + (Number(r.amount) || 0), 0);
-                    }, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })
+                    companies
+                      .filter(c => !c.isHidden)
+                      .reduce((sum, officialCompany) => {
+                        const code = officialCompany.code;
+                        const officialName = officialCompany.name || "";
+                        const cleanName = (name) => {
+                          if (!name) return "";
+                          return name.replace(/บ\.?|บจก\.?|บริษัท|หสน\.?|หจก\.?|จก\.?|\(มหาชน\)/g, "").replace(/\s+/g, "").trim();
+                        };
+                        const targetCoreName = cleanName(officialName);
+                        const matchingCompanyIds = companies
+                          .filter(comp => {
+                            if (comp.code === code && code) return true;
+                            if (!comp.code || comp.code === "-") {
+                              const compCoreName = cleanName(comp.name);
+                              if (targetCoreName && compCoreName && (compCoreName === targetCoreName || (compCoreName.includes(targetCoreName) && targetCoreName.length > 5))) return true;
+                            }
+                            return false;
+                          })
+                          .map(comp => comp.id);
+                        
+                        return sum + stats.filter(r => matchingCompanyIds.includes(r.companyId)).reduce((s, r) => s + (Number(r.amount) || 0), 0);
+                      }, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })
                   }</td>
                   <td colSpan={2}></td>
                 </tr>
@@ -1212,7 +1221,10 @@ const Reports = () => {
                 </tr>
               </thead>
               <tbody>
-                {companies.map((c) => {
+                {companies
+                  .filter(c => !c.isHidden)
+                  .sort((a,b) => (a.order || 0) - (b.order || 0))
+                  .map((c) => {
                   const companyRecords = stats.filter(r => r.companyId === c.id);
                   const count = companyRecords.reduce((sum, r) => sum + (Number(r.count) || 0), 0);
                   const amount = companyRecords.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);

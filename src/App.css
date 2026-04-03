@@ -118,8 +118,13 @@
   border-radius: 4px;
 }
 
-.btn-icon:hover {
-  background: rgba(255, 0, 0, 0.1);
+.btn-icon:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.btn-icon:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .mt-4 { margin-top: 1rem; }
