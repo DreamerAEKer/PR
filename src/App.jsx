@@ -1439,18 +1439,68 @@ const History = () => {
   const [editingKey, setEditingKey] = useState(null);
   const [editData, setEditData] = useState({});
   
-  const sortedRecords = useMemo(() => {
-    return [...(records || [])].filter(Boolean).sort((a, b) => {
-      if (a.date !== b.date) {
+  // Filter & Sort State
+  const [filterCompany, setFilterCompany] = useState('all');
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('desc');
+
+  const filteredAndSortedRecords = useMemo(() => {
+    let result = [...(records || [])].filter(Boolean);
+
+    // Filter by Company
+    if (filterCompany !== 'all') {
+      result = result.filter(r => r.companyId === filterCompany);
+    }
+
+    // Sort Logic
+    result.sort((a, b) => {
+      let valA, valB;
+      
+      switch (sortBy) {
+        case 'date':
+          valA = new Date(a.date).getTime();
+          valB = new Date(b.date).getTime();
+          break;
+        case 'company':
+          valA = companies.find(c => c.id === a.companyId)?.name || '';
+          valB = companies.find(c => c.id === b.companyId)?.name || '';
+          break;
+        case 'amount':
+          valA = Number(a.amount) || 0;
+          valB = Number(b.amount) || 0;
+          break;
+        case 'count':
+          valA = Number(a.count) || 0;
+          valB = Number(b.count) || 0;
+          break;
+        default:
+          valA = new Date(a.date).getTime();
+          valB = new Date(b.date).getTime();
+      }
+
+      if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+      if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+      
+      // Secondary sort for stability (date desc, then timestamp desc)
+      if (sortBy !== 'date') {
         const da = new Date(a.date).getTime();
         const db = new Date(b.date).getTime();
-        if (isNaN(da)) return 1;
-        if (isNaN(db)) return -1;
-        return db - da; 
+        if (da !== db) return db - da;
       }
       return (b.timestamp || 0) - (a.timestamp || 0);
     });
-  }, [records]);
+
+    return result;
+  }, [records, filterCompany, sortBy, sortOrder, companies]);
+
+  const toggleSort = (field) => {
+    if (sortBy === field) {
+      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('desc');
+    }
+  };
 
   const startEdit = (r, key) => {
     setEditingKey(key);
@@ -1468,7 +1518,41 @@ const History = () => {
 
   return (
     <div className="fade-in">
-      <h1 style={{ marginBottom: '2rem' }}>ประวัติการบันทึก</h1>
+      <div className="flex-between mb-8">
+        <h1 style={{ margin: 0 }}>ประวัติการบันทึก</h1>
+        <div className="sort-options">
+          <button className={`sort-btn ${sortBy === 'date' ? `active ${sortOrder}` : ''}`} onClick={() => toggleSort('date')}>
+            <ChevronUp size={14}/> เรียงตามวันที่
+          </button>
+          <button className={`sort-btn ${sortBy === 'company' ? `active ${sortOrder}` : ''}`} onClick={() => toggleSort('company')}>
+            <ChevronUp size={14}/> เรียงตามบริษัท
+          </button>
+          <button className={`sort-btn ${sortBy === 'amount' ? `active ${sortOrder}` : ''}`} onClick={() => toggleSort('amount')}>
+            <ChevronUp size={14}/> เรียงตามยอดเงิน
+          </button>
+        </div>
+      </div>
+
+      <div className="filter-bar">
+        <div className="filter-group">
+          <label>เลือกบริษัท:</label>
+          <select 
+            className="input-select" 
+            style={{ minWidth: '250px' }}
+            value={filterCompany} 
+            onChange={e => setFilterCompany(e.target.value)}
+          >
+            <option value="all">แสดงทั้งหมด</option>
+            {companies
+              .sort((a,b) => (a.order || 0) - (b.order || 0))
+              .map(c => <option key={c.id} value={c.id}>{c.name}</option>)
+            }
+          </select>
+        </div>
+        <div className="text-muted" style={{ fontSize: '0.9rem' }}>
+          พบทั้งหมด {filteredAndSortedRecords.length} รายการ
+        </div>
+      </div>
       
       {!hasRecords ? (
         <div className="glass-card text-center" style={{ padding: '4rem 2rem' }}>
@@ -1490,7 +1574,7 @@ const History = () => {
                 </tr>
               </thead>
               <tbody>
-                {sortedRecords.map((r, idx) => {
+                {filteredAndSortedRecords.map((r, idx) => {
                   const s = services.find(serv => serv.id === r.serviceId);
                   const c = companies.find(comp => comp.id === r.companyId);
                   const key = `${r.date}-${r.companyId}-${r.serviceId}-${r.timestamp || idx}`;
