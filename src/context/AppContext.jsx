@@ -127,6 +127,14 @@ export const AppProvider = ({ children }) => {
     return localStorage.getItem('postage_report_logo') || null;
   });
 
+  const [reportLogoSize, setReportLogoSize] = useState(() => {
+    return Number(localStorage.getItem('postage_report_logo_size')) || 80;
+  });
+
+  const [reportLogoAlign, setReportLogoAlign] = useState(() => {
+    return localStorage.getItem('postage_report_logo_align') || 'center';
+  });
+
   // Sync / Merge 31 standard companies
   useEffect(() => {
     const standardCompanies = [
@@ -216,13 +224,15 @@ export const AppProvider = ({ children }) => {
     try {
       if (reportLogo) {
         localStorage.setItem('postage_report_logo', reportLogo);
+        localStorage.setItem('postage_report_logo_size', reportLogoSize.toString());
+        localStorage.setItem('postage_report_logo_align', reportLogoAlign);
       } else {
         localStorage.removeItem('postage_report_logo');
       }
     } catch (e) {
-      console.error('Failed to save logo:', e);
+      console.error('Failed to save logo settings:', e);
     }
-  }, [reportLogo]);
+  }, [reportLogo, reportLogoSize, reportLogoAlign]);
 
   useEffect(() => {
     try {
@@ -373,7 +383,7 @@ export const AppProvider = ({ children }) => {
       companies, setCompanies, updateCompany, reorderCompaniesByCode,
       records, setRecords, addRecord, deleteRecords, deleteSingleRecord,
       exportData, importData,
-      reportLogo, setReportLogo
+      reportLogo, setReportLogo, reportLogoSize, setReportLogoSize, reportLogoAlign, setReportLogoAlign
     }}>
       {children}
     </AppContext.Provider>
