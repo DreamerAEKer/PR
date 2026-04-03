@@ -649,7 +649,7 @@ const DataEntry = () => {
 };
 
 const Reports = () => {
-  const { services, companies, records, reportLogo, reportLogoSize, reportLogoAlign } = useApp();
+  const { services, companies, records } = useApp();
   const [reportMonth, setReportMonth] = useState(new Date());
   const [reportType, setReportType] = useState('pn3'); // pn3, admin, company, machine
   const [selectedCompany, setSelectedCompany] = useState(companies[0]?.id || '');
@@ -810,25 +810,10 @@ const Reports = () => {
 
         {reportType === 'pn3' && (
           <div className="print-summary portrait">
-            <header className="report-header" style={{ 
-              marginBottom: '1.5rem', 
-              display: 'flex', 
-              flexDirection: reportLogoAlign === 'center' ? 'column' : 'row',
-              alignItems: 'flex-start',
-              gap: '20px',
-              textAlign: reportLogoAlign
-            }}>
-              {reportLogo && reportLogoAlign !== 'right' && (
-                <img src={reportLogo} alt="Logo" style={{ width: `${reportLogoSize}px`, flexShrink: 0 }} />
-              )}
-              <div style={{ flex: 1 }}>
-                <h3 style={{ fontSize: '1.1rem', margin: 0, fontWeight: 'bold' }}>ที่ทำการ ไปรษณีย์กลาง สังกัด ปน.3</h3>
-                <p style={{ margin: '4px 0', fontWeight: 'bold' }}>รายละเอียดรายได้บริการชำระตราไปรษณียากรด้วยเครื่องประทับของที่ทำการ</p>
-                <p style={{ margin: 0, fontWeight: 'bold' }}>ประจำเดือน {safeFormat(reportMonth, 'MMMM yyyy', { locale: th })}</p>
-              </div>
-              {reportLogo && reportLogoAlign === 'right' && (
-                <img src={reportLogo} alt="Logo" style={{ width: `${reportLogoSize}px`, flexShrink: 0 }} />
-              )}
+            <header className="report-header" style={{ marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.1rem', margin: 0 }}>ที่ทำการ ไปรษณีย์กลาง สังกัด ปน.3</h3>
+              <p style={{ margin: '4px 0' }}>รายละเอียดรายได้บริการชำระตราไปรษณียากรด้วยเครื่องประทับของที่ทำการ</p>
+              <p style={{ margin: 0 }}>ประจำเดือน {safeFormat(reportMonth, 'MMMM yyyy', { locale: th })}</p>
             </header>
             <table className="report-table bordered" style={{ width: '100%' }}>
               <thead>
@@ -864,24 +849,9 @@ const Reports = () => {
 
         {reportType === 'company' && (
           <div className="print-company portrait">
-            <header className="report-header" style={{ 
-              marginBottom: '1rem',
-              display: 'flex', 
-              flexDirection: reportLogoAlign === 'center' ? 'column' : 'row',
-              alignItems: 'flex-start',
-              gap: '20px',
-              textAlign: reportLogoAlign
-            }}>
-              {reportLogo && reportLogoAlign !== 'right' && (
-                <img src={reportLogo} alt="Logo" style={{ width: `${reportLogoSize}px`, flexShrink: 0 }} />
-              )}
-              <div style={{ flex: 1 }}>
-                <h2 style={{ margin: 0 }}>{companies.find(c => c.id === selectedCompany)?.name || ''}</h2>
-                <p style={{ margin: '5px 0' }}>ประจำเดือน {safeFormat(reportMonth, 'MMMM yyyy', { locale: th })}</p>
-              </div>
-              {reportLogo && reportLogoAlign === 'right' && (
-                <img src={reportLogo} alt="Logo" style={{ width: `${reportLogoSize}px`, flexShrink: 0 }} />
-              )}
+            <header className="report-header" style={{ textAlign: 'left' }}>
+              <h2>{companies.find(c => c.id === selectedCompany)?.name || ''}</h2>
+              <p>ประจำเดือน {safeFormat(reportMonth, 'MMMM yyyy', { locale: th })}</p>
             </header>
             <table className="report-table compact">
               <thead>
@@ -916,23 +886,8 @@ const Reports = () => {
 
         {reportType === 'admin' && (
           <div className="print-admin portrait">
-            <header className="report-header" style={{ 
-              marginBottom: '1.5rem', 
-              display: 'flex', 
-              flexDirection: reportLogoAlign === 'center' ? 'column' : 'row',
-              alignItems: 'flex-start',
-              gap: '20px',
-              textAlign: reportLogoAlign
-            }}>
-              {reportLogo && reportLogoAlign !== 'right' && (
-                <img src={reportLogo} alt="Logo" style={{ width: `${reportLogoSize}px`, flexShrink: 0 }} />
-              )}
-              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: '1.1rem', fontWeight: 'bold', margin: 0 }}>สรุปรายได้ประจำเดือน {safeFormat(reportMonth, 'MMMM yyyy', { locale: th })}</p>
-              </div>
-              {reportLogo && reportLogoAlign === 'right' && (
-                <img src={reportLogo} alt="Logo" style={{ width: `${reportLogoSize}px`, flexShrink: 0 }} />
-              )}
+            <header className="report-header" style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
+              <p style={{ fontSize: '1.1rem', fontWeight: 'bold', borderBottom: 'none' }}>ประจำเดือน {safeFormat(reportMonth, 'MMMM yyyy', { locale: th })}</p>
             </header>
             
             <div className="admin-simple-layout">
@@ -968,31 +923,15 @@ const Reports = () => {
 
         {reportType === 'admin_v2' && (
           <div className="print-admin-v2 portrait">
-            <header className="report-header-v2" style={{ 
-              marginBottom: '10px', 
-              display: 'flex', 
-              flexDirection: reportLogoAlign === 'center' ? 'column' : 'row',
-              alignItems: 'flex-start',
-              gap: '20px',
-              textAlign: reportLogoAlign,
-              paddingLeft: reportLogoAlign === 'left' ? '0' : '50px' 
-            }}>
-              {reportLogo && reportLogoAlign !== 'right' && (
-                <img src={reportLogo} alt="Logo" style={{ width: `${reportLogoSize}px`, flexShrink: 0 }} />
-              )}
-              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: '1rem', fontWeight: 'bold', margin: 0 }}>
-                  {(() => {
-                    const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-                    const monthStr = months[reportMonth.getMonth()];
-                    const yearBE = (reportMonth.getFullYear() + 543).toString().slice(-2);
-                    return `${monthStr}-${yearBE}`;
-                  })()}
-                </p>
-              </div>
-              {reportLogo && reportLogoAlign === 'right' && (
-                <img src={reportLogo} alt="Logo" style={{ width: `${reportLogoSize}px`, flexShrink: 0 }} />
-              )}
+            <header className="report-header-v2" style={{ marginBottom: '10px', textAlign: 'left', paddingLeft: '50px' }}>
+              <p style={{ fontSize: '1rem', fontWeight: 'bold' }}>
+                {(() => {
+                  const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+                  const monthStr = months[reportMonth.getMonth()];
+                  const yearBE = (reportMonth.getFullYear() + 543).toString().slice(-2);
+                  return `${monthStr}-${yearBE}`;
+                })()}
+              </p>
             </header>
             
             <div className="admin-v2-grid">
@@ -1142,28 +1081,12 @@ const Reports = () => {
 
         {reportType === 'machine_v2' && (
           <div className="print-machine-v2 portrait">
-            <header className="report-header-v3" style={{ 
-              marginBottom: '1rem', 
-              display: 'flex', 
-              flexDirection: reportLogoAlign === 'center' ? 'column' : 'row',
-              alignItems: 'flex-start',
-              gap: '20px',
-              textAlign: reportLogoAlign,
-              padding: reportLogoAlign === 'center' ? '0 50px' : '0'
-            }}>
-              {reportLogo && reportLogoAlign !== 'right' && (
-                <img src={reportLogo} alt="Logo" style={{ width: `${reportLogoSize}px`, flexShrink: 0 }} />
-              )}
-              <div style={{ flex: 1 }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '0' }}>บัญชีสรุปการใช้เครื่องประทับไปรษณียากร</h3>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '2px 0' }}>ที่ทำการไปรษณีย์กลาง 10501 สังกัด ปน.3</h3>
-                <p style={{ marginTop: '0.5rem', fontSize: '1.0rem', fontWeight: 'bold', margin: 0 }}>
-                  ประจำเดือน {safeFormat(reportMonth, 'MMMM yyyy', { locale: th })}
-                </p>
-              </div>
-              {reportLogo && reportLogoAlign === 'right' && (
-                <img src={reportLogo} alt="Logo" style={{ width: `${reportLogoSize}px`, flexShrink: 0 }} />
-              )}
+            <header className="report-header-v3" style={{ textAlign: 'center', marginBottom: '1rem', padding: '0 50px' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '0' }}>บัญชีสรุปการใช้เครื่องประทับไปรษณียากร</h3>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '2px 0' }}>ที่ทำการไปรษณีย์กลาง 10501 สังกัด ปน.3</h3>
+              <p style={{ marginTop: '0.5rem', fontSize: '1.0rem', fontWeight: 'bold' }}>
+                ประจำเดือน {safeFormat(reportMonth, 'MMMM yyyy', { locale: th })}
+              </p>
             </header>
 
             <table className="report-table bordered machine-v2-table">
@@ -1641,7 +1564,6 @@ const AppContent = () => {
             <h1 style={{ marginBottom: '2rem' }}>การตั้งค่า</h1>
             <ServicesManager />
             <CompaniesManager />
-            <LogoManager />
             <BackupManager />
           </div>
         )}
