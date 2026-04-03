@@ -18,7 +18,24 @@ const safeFormat = (date, formatStr, options) => {
     if (!date) return '-';
     const d = typeof date === 'string' ? new Date(date) : date;
     if (isNaN(d.getTime())) return '-';
-    return format(d, formatStr, options);
+    
+    let formatted = format(d, formatStr, options);
+    
+    // Convert to Buddhist Era if Thai locale is used
+    if (options?.locale?.code === 'th') {
+      const yearAD = d.getFullYear();
+      const yearBE = yearAD + 543;
+      
+      if (formatStr.includes('yyyy')) {
+        formatted = formatted.replace(yearAD.toString(), yearBE.toString());
+      } else if (formatStr.includes('yy')) {
+        const ad2 = yearAD.toString().slice(-2);
+        const be2 = yearBE.toString().slice(-2);
+        formatted = formatted.replace(ad2, be2);
+      }
+    }
+    
+    return formatted;
   } catch (e) {
     console.error('Date formatting error:', e);
     return '-';
@@ -736,7 +753,7 @@ const Reports = () => {
           )}
           <div className="month-picker">
             <button className="btn-icon" onClick={() => setReportMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1))}><ChevronLeft/></button>
-            <span>{format(reportMonth, 'MMMM yyyy', { locale: th })}</span>
+            <span>{safeFormat(reportMonth, 'MMMM yyyy', { locale: th })}</span>
             <button className="btn-icon" onClick={() => setReportMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1))}><ChevronRight/></button>
           </div>
           <button className="btn btn-primary" onClick={print}><Printer size={18}/> พิมพ์ (A4)</button>
@@ -925,12 +942,7 @@ const Reports = () => {
           <div className="print-admin-v2 portrait">
             <header className="report-header-v2" style={{ marginBottom: '10px', textAlign: 'left', paddingLeft: '50px' }}>
               <p style={{ fontSize: '1rem', fontWeight: 'bold' }}>
-                {(() => {
-                  const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-                  const monthStr = months[reportMonth.getMonth()];
-                  const yearBE = (reportMonth.getFullYear() + 543).toString().slice(-2);
-                  return `${monthStr}-${yearBE}`;
-                })()}
+                {safeFormat(reportMonth, 'MMM-yy', { locale: th })}
               </p>
             </header>
             
