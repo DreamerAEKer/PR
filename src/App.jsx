@@ -670,7 +670,7 @@ const Reports = () => {
     const monthStr = safeFormat(reportMonth, 'yyyy-MM');
     const filtered = (records || []).filter(r => r && r.date && r.date.startsWith(monthStr));
     
-    if (reportType === 'company') {
+    if (['company', 'company_v2', 'company_summary'].includes(reportType)) {
       return filtered.filter(r => r.companyId === selectedCompany);
     }
     return filtered;
@@ -730,10 +730,12 @@ const Reports = () => {
             <option value="admin">ส่งธุรการ</option>
             <option value="admin_v2">ส่งธุรการ Ver 2</option>
             <option value="company">รายเดือนแยกบริษัท</option>
+            <option value="company_v2">รายงานแยกบริษัท (แบบละเอียด)</option>
+            <option value="company_summary">สรุปรายเดือนแยกบริษัท</option>
             <option value="machine">สรุปเครื่อง (SUMMARY MACHINE)</option>
             <option value="machine_v2">สรุปเครื่องประทับ Ver 2</option>
           </select>
-          {reportType === 'company' && (
+          {['company', 'company_v2', 'company_summary'].includes(reportType) && (
             <select className="input-select" value={selectedCompany} onChange={e => setSelectedCompany(e.target.value)}>
               {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
@@ -884,6 +886,183 @@ const Reports = () => {
                   );
                 })}
               </tbody>
+            </table>
+          </div>
+        )}
+
+        {reportType === 'company_v2' && (
+          <div className="print-company-v2 portrait">
+            <header className="report-header-v2" style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <div className="report-logo-container" style={{ textAlign: reportLogoAlign, marginBottom: '1rem' }}>
+                {reportLogo && <img src={reportLogo} alt="Logo" style={{ width: `${reportLogoSize}px` }} />}
+              </div>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: '0' }}>{companies.find(c => c.id === selectedCompany)?.name || ''}</h2>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '5px 0' }}>ประจำเดือน {safeFormat(reportMonth, 'MMMM yyyy', { locale: th })}</h3>
+            </header>
+
+            {/* Part 1: Daily Breakdown */}
+            <div className="report-section mb-8">
+              <table className="report-table bordered company-v2-daily-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: '50px' }}>วันที่</th>
+                    {services.filter(s => stats.some(r => r.serviceId === s.id)).map(s => (
+                      <th key={s.id} style={{ fontSize: '0.7rem', verticalAlign: 'middle' }}>
+                        {s.name.replace('รายได้', '').replace('ไปรษณียภัณฑ์', 'ปน.').replace('พัสดุไปรษณีย์ภัณฑ์', 'พัสดุ').replace('ในประเทศ', '(ใน)').replace('ระหว่างประเทศ', '(ต่าง)')}
+                      </th>
+                    ))}
+                    <th style={{ width: '80px' }}>รวม</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {eachDayOfInterval({ start: startOfMonth(reportMonth), end: endOfMonth(reportMonth) }).map(day => {
+                    const dStr = format(day, 'yyyy-MM-dd');
+                    const dayRecords = stats.filter(r => r.date === dStr);
+                    const dayTotal = dayRecords.reduce((sum, r) => sum + r.amount, 0);
+                    if (dayTotal === 0) return null;
+                    
+                    const activeServices = services.filter(s => stats.some(r => r.serviceId === s.id));
+                    
+                    return (
+                      <tr key={dStr}>
+                        <td style={{ fontWeight: 'bold' }}>{format(day, 'd')}</td>
+                        {activeServices.map(s => {
+                          const amt = dayRecords.find(r => r.serviceId === s.id)?.amount;
+                          return <td key={s.id} className="num">{amt ? amt.toLocaleString() : ''}</td>;
+                        })}
+                        <td className="num" style={{ fontWeight: 'bold', background: '#f9f9f9' }}>{dayTotal.toLocaleString()}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr style={{ fontWeight: 'bold', background: '#f2f2f2' }}>
+                    <td>รวม</td>
+                    {services.filter(s => stats.some(r => r.serviceId === s.id)).map(s => (
+                      <td key={s.id} className="num">
+                        {stats.filter(r => r.serviceId === s.id).reduce((sum, r) => sum + r.amount, 0).toLocaleString()}
+                      </td>
+                    ))}
+                    <td className="num">{stats.reduce((sum, r) => sum + r.amount, 0).toLocaleString()}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            {/* Part 2: Service Summary */}
+            <div className="report-section" style={{ width: '100%', marginTop: '30px' }}>
+              <h4 style={{ borderBottom: '2px solid #000', paddingBottom: '5px', marginBottom: '10px' }}>สรุปแยกประเภทบริการ</h4>
+              <table className="report-table bordered company-v2-summary-table">
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left', paddingLeft: '15px' }}>ประเภทบริการ</th>
+                    <th style={{ width: '100px' }}>ชิ้น</th>
+                    <th style={{ width: '150px' }}>เงิน</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {services
+                    .filter(s => ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14'].includes(s.reportGroupId))
+                    .reduce((acc, s) => {
+                      // Group by reportGroupId to match the summary style
+                      const existing = acc.find(item => item.groupId === s.reportGroupId);
+                      const sCount = stats.filter(r => r.serviceId === s.id).reduce((sum, r) => sum + r.count, 0);
+                      const sAmount = stats.filter(r => r.serviceId === s.id).reduce((sum, r) => sum + r.amount, 0);
+                      
+                      if (existing) {
+                        existing.count += sCount;
+                        existing.amount += sAmount;
+                      } else {
+                        acc.push({
+                          groupId: s.reportGroupId,
+                          name: s.name.split('-')[0], // Simplified name
+                          fullName: s.name,
+                          count: sCount,
+                          amount: sAmount
+                        });
+                      }
+                      return acc;
+                    }, [])
+                    .map(item => (
+                      <tr key={item.groupId}>
+                        <td style={{ textAlign: 'left', paddingLeft: '15px' }}>{item.fullName}</td>
+                        <td className="num">{item.count.toLocaleString()}</td>
+                        <td className="num">{item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    ))}
+                </tbody>
+                <tfoot>
+                  <tr style={{ fontWeight: 'bold', background: '#f2f2f2' }}>
+                    <td style={{ textAlign: 'right', paddingRight: '15px' }}>รวมทั้งสิ้น</td>
+                    <td className="num">{stats.reduce((sum, r) => sum + r.count, 0).toLocaleString()}</td>
+                    <td className="num">{stats.reduce((sum, r) => sum + r.amount, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {reportType === 'company_summary' && (
+          <div className="print-company-summary portrait">
+            <header className="report-header-v2" style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 'bold', margin: '0' }}>สรุปรายละเอียดรายได้บริการชำระตราไปรษณียากรด้วยเครื่องประทับ</h2>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '8px 0' }}>{companies.find(c => c.id === selectedCompany)?.name || ''}</h3>
+              <p style={{ fontSize: '1.1rem', fontWeight: 'bold', margin: '5px 0' }}>ประจำเดือน {safeFormat(reportMonth, 'MMMM yyyy', { locale: th })}</p>
+            </header>
+
+            <table className="report-table bordered pn3-v2-table">
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left', paddingLeft: '15px' }}>ประเภทบริการ</th>
+                  <th style={{ width: '120px' }}>ชิ้น</th>
+                  <th style={{ width: '180px' }}>เงิน</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { id: '1', name: 'รายได้ไปรษณียภัณฑ์ในประเทศ-ธรรมดา' },
+                  { id: '2', name: 'รายได้ไปรษณียภัณฑ์ในประเทศ-รับรอง' },
+                  { id: '3', name: 'รายได้ไปรษณียภัณฑ์ในประเทศ-ลงทะเบียน' },
+                  { id: '4', name: 'รายได้ไปรษณียภัณฑ์ในประเทศ-รับประกัน' },
+                  { id: '5', name: 'รายได้ไปรษณียภัณฑ์ระหว่างประเทศ-ธรรมดา' },
+                  { id: '6', name: 'รายได้ไปรษณียภัณฑ์ระหว่างประเทศ-ลงทะเบียน' },
+                  { id: '7', name: 'รายได้ไปรษณียภัณฑ์ระหว่างประเทศ-รับประกัน' },
+                  { id: '8', name: 'รายได้พัสดุไปรษณีย์ภัณฑ์ในประเทศ-ธรรมดา' },
+                  { id: '9', name: 'รายได้พัสดุไปรษณีย์ภัณฑ์ในประเทศ-รับประกัน' },
+                  { id: '10', name: 'รายได้พัสดุไปรษณีย์ภัณฑ์ระหว่างประเทศ-ธรรมดา' },
+                  { id: '11', name: 'รายได้พัสดุไปรษณีย์ภัณฑ์ระหว่างประเทศรับ-รับประกัน' },
+                  { id: '12', name: 'รายได้ไปรษณีย์ด่วนพิเศษในประเทศ' },
+                  { id: '13', name: 'รายได้ไปรษณีย์ด่วนพิเศษระหว่างประเทศ' },
+                  { id: '14', name: 'รายได้บริการธุรกิจตอบรับ-ในประเทศ' }
+                ].map((row) => {
+                  const groupRecords = stats.filter(r => {
+                    const s = services.find(serv => serv.id === r.serviceId);
+                    return s && s.reportGroupId === row.id;
+                  });
+                  const gCount = groupRecords.reduce((sum, r) => sum + (Number(r.count) || 0), 0);
+                  const gAmount = groupRecords.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+                  
+                  return (
+                    <tr key={row.id}>
+                      <td style={{ textAlign: 'left', paddingLeft: '15px' }}>{row.name}</td>
+                      <td className="num">{gCount > 0 ? gCount.toLocaleString() : '0'}</td>
+                      <td className="num">{gAmount > 0 ? gAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '0.00'}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr style={{ fontWeight: 'bold', background: '#f2f2f2' }}>
+                  <td style={{ textAlign: 'right', paddingRight: '15px' }}>รวมทั้งสิ้น</td>
+                  <td className="num">
+                    {stats.reduce((sum, r) => sum + (Number(r.count) || 0), 0).toLocaleString()}
+                  </td>
+                  <td className="num" style={{ borderBottom: 'double 3px #000' }}>
+                    {stats.reduce((sum, r) => sum + (Number(r.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         )}
