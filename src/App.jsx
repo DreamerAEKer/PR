@@ -141,10 +141,10 @@ const ServicesManager = () => {
 };
 
 const CompaniesManager = () => {
-  const { companies, setCompanies, updateCompany } = useApp();
-  const [newCompany, setNewCompany] = useState({ name: '', code: '' });
+  const { companies, setCompanies, updateCompany, reorderCompaniesByCode } = useApp();
   const [editingId, setEditingId] = useState(null);
   const [editValues, setEditValues] = useState({});
+  const [newCompany, setNewCompany] = useState({ name: '', code: '', showInEntry: true, showInReport: true });
 
   const add = () => {
     if (!newCompany.name) return;
@@ -172,6 +172,12 @@ const CompaniesManager = () => {
     setCompanies(newCompanies);
   };
 
+  const handleSortByCode = () => {
+    if (window.confirm('คุณต้องการเรียงลำดับบริษัทตามเลขที่รหัสรหัสอนุญาตใหม่ทั้งหมดใช่หรือไม่? (ลำดับที่คุณเลื่อนมือไว้จะถูกรีเซ็ต)')) {
+      reorderCompaniesByCode();
+    }
+  };
+
   const startEdit = (c) => {
     setEditingId(c.id);
     setEditValues(c);
@@ -184,7 +190,10 @@ const CompaniesManager = () => {
 
   return (
     <div className="glass-card mt-8">
-      <h2 style={{ marginBottom: '1rem' }}>จัดการบริษัทลูกค้า</h2>
+      <div className="flex-between mb-4">
+        <h2 style={{ marginBottom: 0 }}>จัดการบริษัทลูกค้า</h2>
+        <button className="btn btn-secondary" onClick={handleSortByCode}>เรียงตามเลขที่</button>
+      </div>
       <div className="flex-form">
         <input placeholder="รหัสบริษัท (ถ้ามี)" value={newCompany.code} onChange={e => setNewCompany({...newCompany, code: e.target.value})} />
         <input placeholder="ชื่อบริษัท" value={newCompany.name} onChange={e => setNewCompany({...newCompany, name: e.target.value})} style={{ flex: 2 }} />
@@ -195,7 +204,8 @@ const CompaniesManager = () => {
         <table className="grid-entry-table">
           <thead>
             <tr>
-              <th style={{ width: '40px' }}>แสดง</th>
+              <th style={{ width: '60px' }}>บันทึก</th>
+              <th style={{ width: '60px' }}>รายงาน</th>
               <th style={{ width: '100px' }}>รหัส</th>
               <th>ชื่อบริษัทลูกค้า</th>
               <th style={{ width: '120px' }}>ลำดับ</th>
@@ -210,8 +220,15 @@ const CompaniesManager = () => {
                     <td style={{ textAlign: 'center' }}>
                       <input 
                         type="checkbox" 
-                        checked={!editValues.isHidden} 
-                        onChange={e => setEditValues({...editValues, isHidden: !e.target.checked})} 
+                        checked={editValues.showInEntry} 
+                        onChange={e => setEditValues({...editValues, showInEntry: e.target.checked})} 
+                      />
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={editValues.showInReport} 
+                        onChange={e => setEditValues({...editValues, showInReport: e.target.checked})} 
                       />
                     </td>
                     <td><input value={editValues.code || ''} onChange={e => setEditValues({...editValues, code: e.target.value})} className="compact" /></td>
@@ -226,8 +243,15 @@ const CompaniesManager = () => {
                     <td style={{ textAlign: 'center' }}>
                       <input 
                         type="checkbox" 
-                        checked={!c.isHidden} 
-                        onChange={e => updateCompany(c.id, { isHidden: !e.target.checked })} 
+                        checked={c.showInEntry} 
+                        onChange={e => updateCompany(c.id, { showInEntry: e.target.checked })} 
+                      />
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={c.showInReport} 
+                        onChange={e => updateCompany(c.id, { showInReport: e.target.checked })} 
                       />
                     </td>
                     <td>{c.code || '-'}</td>
@@ -478,7 +502,7 @@ const DataEntry = () => {
         <div className="flex-form-controls">
           <select className="input-select" value={selectedCompany} onChange={e => setSelectedCompany(e.target.value)}>
             {companies
-              .filter(c => !c.isHidden)
+              .filter(c => c.showInEntry)
               .sort((a,b) => (a.order || 0) - (b.order || 0))
               .map(c => <option key={c.id} value={c.id}>{c.name} {c.code ? `(${c.code})` : ''}</option>)
             }
@@ -1081,7 +1105,7 @@ const Reports = () => {
               </thead>
               <tbody>
                 {companies
-                  .filter(c => !c.isHidden)
+                  .filter(c => c.showInReport)
                   .sort((a,b) => (a.order || 0) - (b.order || 0))
                   .map((officialCompany) => {
                   const code = officialCompany.code;
@@ -1143,7 +1167,7 @@ const Reports = () => {
                   <td colSpan={2} style={{ textAlign: 'right', paddingRight: '10px' }}>รวมทั้งสิ้น</td>
                   <td className="num">{
                     companies
-                      .filter(c => !c.isHidden)
+                      .filter(c => c.showInReport)
                       .reduce((sum, officialCompany) => {
                         const code = officialCompany.code;
                         const officialName = officialCompany.name || "";
@@ -1169,7 +1193,7 @@ const Reports = () => {
                   }</td>
                   <td className="num">{
                     companies
-                      .filter(c => !c.isHidden)
+                      .filter(c => c.showInReport)
                       .reduce((sum, officialCompany) => {
                         const code = officialCompany.code;
                         const officialName = officialCompany.name || "";
@@ -1222,7 +1246,7 @@ const Reports = () => {
               </thead>
               <tbody>
                 {companies
-                  .filter(c => !c.isHidden)
+                  .filter(c => c.showInReport)
                   .sort((a,b) => (a.order || 0) - (b.order || 0))
                   .map((c) => {
                   const companyRecords = stats.filter(r => r.companyId === c.id);

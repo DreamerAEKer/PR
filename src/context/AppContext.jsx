@@ -130,37 +130,37 @@ export const AppProvider = ({ children }) => {
   // Sync / Merge 31 standard companies
   useEffect(() => {
     const standardCompanies = [
-      { id: 'h0032', name: 'บ.เอเชี่ยนฮอนด้าคอมเมอร์ส จก.', code: 'H0032', order: 1 },
-      { id: 'h0128', name: 'บ.ไทยเศรษฐกิจประกันภัย จก.(มหาชน)', code: 'H0128', order: 2 },
-      { id: 'h0130', name: 'บ.สิทธิผล 1919 จก.', code: 'H0130', order: 3 },
-      { id: 'h0143', name: 'บ.เอสเอวายเอ(ประเทศไทย)จำกัด', code: 'H0143', order: 4 },
-      { id: 'h0148', name: 'ราชกรีฑาสโมสร', code: 'H0148', order: 5 },
-      { id: 'h0223', name: 'บ.สรรพสินค้าเซ็นทรัล จก.', code: 'H0223', order: 6 },
-      { id: 'h0241', name: 'สำนักงานบริการโทรศัพท์สุรวงศ์', code: 'H0241', order: 7 },
-      { id: 'h0250', name: 'บ.โรงแรมรอยัลออคิด(ปทท) จก.(มหาชน)', code: 'H0250', order: 8 },
-      { id: 'h0267', name: 'หสน.ดัลลัส แอนด์ กิ๊บบินส์', code: 'H0267', order: 9 },
-      { id: 'h0298', name: 'ธ.มิตซูโฮคอร์ปอเรต จก. สาขากรุงเทพฯ', code: 'H0298', order: 10 },
-      { id: 'h0308', name: 'บ.ซิงเกอร์ประเทศไทย จำกัด', code: 'H0308', order: 11 },
-      { id: 'p0403', name: 'บ.พาราวันเซอร์วิส จก.', code: 'P0403', order: 12 },
-      { id: 'p0574', name: 'ธนาคารสากลพาณิชย์แห่งประเทศจีน', code: 'P0574', order: 13 },
-      { id: 'p0617', name: 'บ.อเวนติส ฟาร์มา จก.', code: 'P0617', order: 14 },
-      { id: 'p0727', name: 'บ.ดูปองต์(ประเทศไทย)จก.', code: 'P0727', order: 15 },
-      { id: 'p1074', name: 'บ.พรีเชียส ชิปปิ้ง จก.(มหาชน)', code: 'P1074', order: 16 },
-      { id: 'p3028', name: 'สถานทูตอเมริกา', code: 'P3028', order: 17 },
-      { id: 'p3064', name: 'สถานเอกอัครราชทูตแคนาดา', code: 'P3064', order: 18 },
-      { id: 'p3088', name: 'สถานเอกอัครราชทูตสวิสเซอร์แลนด์', code: 'P3088', order: 19 },
-      { id: 'p3111', name: 'บ.นิวแฮมพ์เชียร์ อินชัวรันส์ จก.', code: 'P3111', order: 20 },
-      { id: 'p3114', name: 'บ.มิตรแท้ประกันภัย จำกัด', code: 'P3114', order: 21 },
-      { id: 'p3115', name: 'บ.ฮี โด ชู (ไทยแลนด์) จก.', code: 'P3115', order: 22 },
-      { id: 'n20011', name: 'บ.ล็อกเล่ย์ (กรุงเทพฯ) จก.', code: 'N20011', order: 23 },
-      { id: 'n20028', name: 'บริษัท ไบเออร์ไทย จำกัด', code: 'N20028', order: 24 },
-      { id: 'n20032', name: 'สำนักกฎหมายดำเนินสมเกียรติและบุญมา', code: 'N20032', order: 25 },
-      { id: 'n40011', name: 'บ.บริหารสินทรัพย์กรุงเทพพาณิชย์การ จก.', code: 'N40011', order: 26 },
-      { id: 'n40016', name: 'บริษัท ฟิลิปประกันชีวิต จำกัด (มหาชน)', code: 'N40016', order: 27 },
-      { id: 'n40019', name: 'Sumitomo Corporation', code: 'N40019', order: 28 },
-      { id: 'n40021', name: 'ธ.แห่งอเมริกา เนชั่นแนล แอสโซซิเอชั่น', code: 'N40021', order: 29 },
-      { id: 'n40022', name: 'เมอร์เซเดส-เบนซ์', code: 'N40022', order: 30 },
-      { id: 'n40027', name: 'สถานทูตเยอรมนี', code: 'N40027', order: 31 }
+      { id: 'h0032', name: 'บ.เอเชี่ยนฮอนด้าคอมเมอร์ส จก.', code: 'H0032', order: 1, showInEntry: true, showInReport: true },
+      { id: 'h0128', name: 'บ.ไทยเศรษฐกิจประกันภัย จก.(มหาชน)', code: 'H0128', order: 2, showInEntry: true, showInReport: true },
+      { id: 'h0130', name: 'บ.สิทธิผล 1919 จก.', code: 'H0130', order: 3, showInEntry: true, showInReport: true },
+      { id: 'h0143', name: 'บ.เอสเอวายเอ(ประเทศไทย)จำกัด', code: 'H0143', order: 4, showInEntry: true, showInReport: true },
+      { id: 'h0148', name: 'ราชกรีฑาสโมสร', code: 'H0148', order: 5, showInEntry: true, showInReport: true },
+      { id: 'h0223', name: 'บ.สรรพสินค้าเซ็นทรัล จก.', code: 'H0223', order: 6, showInEntry: true, showInReport: true },
+      { id: 'h0241', name: 'สำนักงานบริการโทรศัพท์สุรวงศ์', code: 'H0241', order: 7, showInEntry: true, showInReport: true },
+      { id: 'h0250', name: 'บ.โรงแรมรอยัลออคิด(ปทท) จก.(มหาชน)', code: 'H0250', order: 8, showInEntry: true, showInReport: true },
+      { id: 'h0267', name: 'หสน.ดัลลัส แอนด์ กิ๊บบินส์', code: 'H0267', order: 9, showInEntry: true, showInReport: true },
+      { id: 'h0298', name: 'ธ.มิตซูโฮคอร์ปอเรต จก. สาขากรุงเทพฯ', code: 'H0298', order: 10, showInEntry: true, showInReport: true },
+      { id: 'h0308', name: 'บ.ซิงเกอร์ประเทศไทย จำกัด', code: 'H0308', order: 11, showInEntry: true, showInReport: true },
+      { id: 'p0403', name: 'บ.พาราวันเซอร์วิส จก.', code: 'P0403', order: 12, showInEntry: true, showInReport: true },
+      { id: 'p0574', name: 'ธนาคารสากลพาณิชย์แห่งประเทศจีน', code: 'P0574', order: 13, showInEntry: true, showInReport: true },
+      { id: 'p0617', name: 'บ.อเวนติส ฟาร์มา จก.', code: 'P0617', order: 14, showInEntry: true, showInReport: true },
+      { id: 'p0727', name: 'บ.ดูปองต์(ประเทศไทย)จก.', code: 'P0727', order: 15, showInEntry: true, showInReport: true },
+      { id: 'p1074', name: 'บ.พรีเชียส ชิปปิ้ง จก.(มหาชน)', code: 'P1074', order: 16, showInEntry: true, showInReport: true },
+      { id: 'p3028', name: 'สถานทูตอเมริกา', code: 'P3028', order: 17, showInEntry: true, showInReport: true },
+      { id: 'p3064', name: 'สถานเอกอัครราชทูตแคนาดา', code: 'P3064', order: 18, showInEntry: true, showInReport: true },
+      { id: 'p3088', name: 'สถานเอกอัครราชทูตสวิสเซอร์แลนด์', code: 'P3088', order: 19, showInEntry: true, showInReport: true },
+      { id: 'p3111', name: 'บ.นิวแฮมพ์เชียร์ อินชัวรันส์ จก.', code: 'P3111', order: 20, showInEntry: true, showInReport: true },
+      { id: 'p3114', name: 'บ.มิตรแท้ประกันภัย จำกัด', code: 'P3114', order: 21, showInEntry: true, showInReport: true },
+      { id: 'p3115', name: 'บ.ฮี โด ชู (ไทยแลนด์) จก.', code: 'P3115', order: 22, showInEntry: true, showInReport: true },
+      { id: 'n20011', name: 'บ.ล็อกเล่ย์ (กรุงเทพฯ) จก.', code: 'N20011', order: 23, showInEntry: true, showInReport: true },
+      { id: 'n20028', name: 'บริษัท ไบเออร์ไทย จำกัด', code: 'N20028', order: 24, showInEntry: true, showInReport: true },
+      { id: 'n20032', name: 'สำนักกฎหมายดำเนินสมเกียรติและบุญมา', code: 'N20032', order: 25, showInEntry: true, showInReport: true },
+      { id: 'n40011', name: 'บ.บริหารสินทรัพย์กรุงเทพพาณิชย์การ จก.', code: 'N40011', order: 26, showInEntry: true, showInReport: true },
+      { id: 'n40016', name: 'บริษัท ฟิลิปประกันชีวิต จำกัด (มหาชน)', code: 'N40016', order: 27, showInEntry: true, showInReport: true },
+      { id: 'n40019', name: 'Sumitomo Corporation', code: 'N40019', order: 28, showInEntry: true, showInReport: true },
+      { id: 'n40021', name: 'ธ.แห่งอเมริกา เนชั่นแนล แอสโซซิเอชั่น', code: 'N40021', order: 29, showInEntry: true, showInReport: true },
+      { id: 'n40022', name: 'เมอร์เซเดส-เบนซ์', code: 'N40022', order: 30, showInEntry: true, showInReport: true },
+      { id: 'n40027', name: 'สถานทูตเยอรมนี', code: 'N40027', order: 31, showInEntry: true, showInReport: true }
     ];
 
     setCompanies(prev => {
@@ -177,11 +177,27 @@ export const AppProvider = ({ children }) => {
 
       let changed = false;
       const updated = sortedCurrent.map((c, idx) => {
-        if (c.order === undefined) {
+        let u = { ...c };
+        // 1. Assign order if missing
+        if (u.order === undefined) {
+          u.order = idx + 1;
           changed = true;
-          return { ...c, order: idx + 1 };
         }
-        return c;
+        // 2. Migration: isHidden -> showInEntry/showInReport
+        if (u.showInEntry === undefined) {
+          u.showInEntry = u.isHidden === undefined ? true : !u.isHidden;
+          changed = true;
+        }
+        if (u.showInReport === undefined) {
+          u.showInReport = u.isHidden === undefined ? true : !u.isHidden;
+          changed = true;
+        }
+        // 3. Clean up old field
+        if (u.hasOwnProperty('isHidden')) {
+          delete u.isHidden;
+          changed = true;
+        }
+        return u;
       });
 
       // 2. Merge brand new standard companies
@@ -277,6 +293,18 @@ export const AppProvider = ({ children }) => {
     setRecords(prev => prev.filter(r => !(r.date === date && r.companyId === companyId)));
   };
 
+  const reorderCompaniesByCode = () => {
+    setCompanies(prev => {
+      const sorted = [...prev].sort((a,b) => {
+        if (a.code && b.code) return a.code.localeCompare(b.code, 'en', { numeric: true });
+        if (a.code) return -1;
+        if (b.code) return 1;
+        return (a.name || '').localeCompare(b.name || '', 'th');
+      });
+      return sorted.map((c, idx) => ({ ...c, order: idx + 1 }));
+    });
+  };
+
   const exportData = () => {
     const data = { services, companies, records, version: '1.1', exportDate: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -342,7 +370,7 @@ export const AppProvider = ({ children }) => {
   return (
     <AppContext.Provider value={{ 
       services, setServices, updateService,
-      companies, setCompanies, updateCompany,
+      companies, setCompanies, updateCompany, reorderCompaniesByCode,
       records, setRecords, addRecord, deleteRecords, deleteSingleRecord,
       exportData, importData,
       reportLogo, setReportLogo
