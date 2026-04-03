@@ -158,7 +158,7 @@ const ServicesManager = () => {
 };
 
 const CompaniesManager = () => {
-  const { companies, setCompanies, updateCompany, reorderCompaniesByCode } = useApp();
+  const { companies, setCompanies, updateCompany, reorderCompaniesByCode, moveCompany } = useApp();
   const [editingId, setEditingId] = useState(null);
   const [editValues, setEditValues] = useState({});
   const [newCompany, setNewCompany] = useState({ name: '', code: '', showInEntry: true, showInReport: true });
@@ -173,20 +173,7 @@ const CompaniesManager = () => {
   const remove = (id) => setCompanies(companies.filter(c => c.id !== id));
 
   const move = (id, direction) => {
-    const idx = companies.findIndex(c => c.id === id);
-    if (idx === -1) return;
-    if (direction === 'up' && idx === 0) return;
-    if (direction === 'down' && idx === companies.length - 1) return;
-
-    const newCompanies = [...companies].sort((a,b) => (a.order || 0) - (b.order || 0));
-    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
-    
-    // Swap orders
-    const temp = newCompanies[idx].order;
-    newCompanies[idx].order = newCompanies[targetIdx].order;
-    newCompanies[targetIdx].order = temp;
-
-    setCompanies(newCompanies);
+    moveCompany(id, direction);
   };
 
   const handleSortByCode = () => {

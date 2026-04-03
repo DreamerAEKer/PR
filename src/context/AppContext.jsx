@@ -315,6 +315,25 @@ export const AppProvider = ({ children }) => {
     });
   };
 
+  const moveCompany = (id, direction) => {
+    setCompanies(prev => {
+      const sorted = [...prev].sort((a,b) => (a.order || 0) - (b.order || 0));
+      const idx = sorted.findIndex(c => c.id === id);
+      if (idx === -1) return prev;
+      if (direction === 'up' && idx === 0) return prev;
+      if (direction === 'down' && idx === sorted.length - 1) return prev;
+
+      const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+      
+      const newSorted = [...sorted];
+      const temp = newSorted[idx];
+      newSorted[idx] = newSorted[targetIdx];
+      newSorted[targetIdx] = temp;
+
+      return newSorted.map((c, i) => ({ ...c, order: i + 1 }));
+    });
+  };
+
   const exportData = () => {
     const data = { services, companies, records, version: '1.1', exportDate: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -380,7 +399,7 @@ export const AppProvider = ({ children }) => {
   return (
     <AppContext.Provider value={{ 
       services, setServices, updateService,
-      companies, setCompanies, updateCompany, reorderCompaniesByCode,
+      companies, setCompanies, updateCompany, reorderCompaniesByCode, moveCompany,
       records, setRecords, addRecord, deleteRecords, deleteSingleRecord,
       exportData, importData,
       reportLogo, setReportLogo, reportLogoSize, setReportLogoSize, reportLogoAlign, setReportLogoAlign
