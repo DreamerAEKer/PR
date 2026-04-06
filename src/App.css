@@ -853,3 +853,85 @@
     width: 100%;
   }
 }
+
+/* Dashboard Enhancements: View Modes & YoY */
+.view-mode-toggle {
+  display: flex;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+}
+
+.view-mode-toggle button {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 7px;
+  transition: all 0.2s;
+}
+
+.view-mode-toggle button.active {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+}
+
+.quarter-selector {
+  display: flex;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+}
+
+.quarter-selector button {
+  padding: 0.4rem 0.8rem;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.quarter-selector button.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+}
+
+.input-select.mini {
+  width: 80px;
+  padding: 0.4rem 0.6rem;
+}
+
+.growth-badge {
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.growth-badge.up { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+.growth-badge.down { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+.growth-badge.transparent { background: rgba(255, 255, 255, 0.1); color: white; }
+
+.prev-info {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+
+@media (max-width: 900px) {
+  .dashboard-top {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1.5rem;
+  }
+}
