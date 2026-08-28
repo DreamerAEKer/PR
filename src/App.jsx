@@ -1666,7 +1666,7 @@ const DataEntry = () => {
 
   return (
     <div className="fade-in app-content-inner">
-            {/* Top Header */}
+      {/* Top Header */}
       <div className="flex-between mb-4 flex-wrap gap-4">
         <div>
           <h1 style={{ margin: 0 }}>บันทึกข้อมูลรายวัน</h1>
@@ -1772,7 +1772,7 @@ const DataEntry = () => {
         </div>
       )}
 
-      <div className="grid-2col-entry">
+      <div className="grid-2col">
         {/* Entry Form */}
         <div className="glass-card">
           {/* Active Company Status Card */}
