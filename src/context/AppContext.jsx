@@ -663,7 +663,7 @@ export const AppProvider = ({ children }) => {
       services, setServices, updateService,
       companies, setCompanies, updateCompany, reorderCompaniesByCode, moveCompany, toggleCompanyQuickSelect,
       records, setRecords, addRecord, deleteRecords, deleteSingleRecord, moveSingleRecord, moveDailyRecords, moveSingleRecordToCompany, moveDailyRecordsToCompany,
-      machineReadings, addMachineReading, deleteMachineReading,
+      machineReadings, setMachineReadings, addMachineReading, deleteMachineReading,
       exportData, importData,
       reportLogo, setReportLogo, reportLogoSize, setReportLogoSize, reportLogoAlign, setReportLogoAlign,
       navigationTarget, setNavigationTarget, primaryLocation, primaryRecordCount, setAsPrimaryLocation, clearPrimaryLocation

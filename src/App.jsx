@@ -3642,16 +3642,16 @@ const CloudSyncManager = () => {
         alert('ยังไม่พบข้อมูลที่บันทึกไว้บนคลาวด์');
         return;
       }
-      if (data.records && data.records.length > 0) {
+      if (data.records && typeof setRecords === 'function') {
         setRecords(data.records);
       }
-      if (data.companies && data.companies.length > 0) {
+      if (data.companies && typeof setCompanies === 'function') {
         setCompanies(data.companies);
       }
-      if (data.services && data.services.length > 0) {
+      if (data.services && typeof setServices === 'function') {
         setServices(data.services);
       }
-      if (data.machineReadings && data.machineReadings.length > 0) {
+      if (data.machineReadings && typeof setMachineReadings === 'function') {
         setMachineReadings(data.machineReadings);
       }
       const nowStr = new Date().toLocaleString('th-TH');
