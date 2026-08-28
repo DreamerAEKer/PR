@@ -1666,17 +1666,20 @@ const DataEntry = () => {
 
   return (
     <div className="fade-in app-content-inner">
-      {/* Top Consolidated Single-Row Header */}
-      <div className="data-entry-header-compact">
-        <h1 className="data-entry-title">
-          <span>📝 บันทึกข้อมูลรายวัน</span>
-        </h1>
-        <div className="flex-form-controls" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+            {/* Top Header */}
+      <div className="flex-between mb-4 flex-wrap gap-4">
+        <div>
+          <h1 style={{ margin: 0 }}>บันทึกข้อมูลรายวัน</h1>
+          <p className="text-muted" style={{ margin: '4px 0 0 0', fontSize: '0.9rem' }}>
+            เลือกบริษัทและวันที่ แล้วกรอกจำนวนชิ้นและยอดเงิน
+          </p>
+        </div>
+        <div className="flex-form-controls" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <select 
             className="input-select" 
             value={selectedCompany} 
             onChange={e => handleSelectCompany(e.target.value)}
-            style={{ fontWeight: 600, minWidth: '200px', padding: '4px 8px' }}
+            style={{ fontWeight: 600, minWidth: '220px' }}
           >
             {entryCompanies.map(c => (
               <option key={c.id} value={c.id}>
@@ -1685,13 +1688,13 @@ const DataEntry = () => {
             ))}
           </select>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <button 
               type="button" 
               className="btn btn-secondary" 
               onClick={() => handleShiftDate(-1)} 
               title="วันก่อนหน้า"
-              style={{ padding: '4px 8px', fontSize: '0.82rem' }}
+              style={{ padding: '6px 10px', fontSize: '0.85rem' }}
             >
               ◀
             </button>
@@ -1701,7 +1704,7 @@ const DataEntry = () => {
               className="btn btn-secondary" 
               onClick={() => handleShiftDate(1)} 
               title="วันถัดไป"
-              style={{ padding: '4px 8px', fontSize: '0.82rem' }}
+              style={{ padding: '6px 10px', fontSize: '0.85rem' }}
             >
               ▶
             </button>
@@ -1710,7 +1713,7 @@ const DataEntry = () => {
               className="btn btn-secondary" 
               onClick={() => handleSelectDate(getSmartDefaultDate())} 
               title="ไปยังวันทำการล่าสุด/วันนี้"
-              style={{ padding: '4px 8px', fontSize: '0.82rem' }}
+              style={{ padding: '6px 10px', fontSize: '0.85rem' }}
             >
               วันนี้
             </button>
