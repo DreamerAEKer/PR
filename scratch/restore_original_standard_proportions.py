@@ -1,0 +1,311 @@
+import re
+
+# 1. Restore standard original balanced CSS
+standard_original_css = """
+/* Standard Original Proportions & Clean Balanced Layout */
+:root {
+  --sidebar-width: 260px;
+  --content-max-width: 1360px;
+  --card-bg: rgba(255, 255, 255, 0.95);
+  --glass-border: rgba(0, 0, 0, 0.12);
+  --radius: 12px;
+}
+
+[data-theme='dark'] {
+  --card-bg: rgba(30, 41, 59, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.side-nav {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid var(--glass-border);
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  height: 100vh;
+  z-index: 100;
+  box-sizing: border-box;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 2.5rem;
+  padding: 0 0.8rem;
+  letter-spacing: -0.04em;
+}
+
+.side-nav button {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: transparent;
+  color: var(--text-main);
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.side-nav button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.side-nav button.active {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+}
+
+.app-content {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  padding: 2rem 3rem;
+  max-width: var(--content-max-width);
+  width: calc(100% - var(--sidebar-width));
+  box-sizing: border-box;
+}
+
+.grid-2col {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 1.75rem;
+  align-items: start;
+}
+
+.grid-2col-entry {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 1.75rem;
+  align-items: start;
+}
+
+.glass-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(255,255,255,0.5);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.entry-form-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.form-group input, 
+.input-select {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus,
+.input-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.quick-company-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.quick-company-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quick-company-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-main);
+}
+
+.quick-company-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.quick-company-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quick-company-btn:hover {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: var(--primary);
+}
+
+.quick-company-btn.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.active-company-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: -0.25rem 0 1.25rem;
+  padding: 0.85rem 1.25rem;
+  border-radius: 12px;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.06) 0%, rgba(59, 130, 246, 0.02) 100%);
+}
+
+.active-company-label {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.active-company-subtext {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+"""
+
+with open('src/App.css', 'r', encoding='utf-8') as f:
+    css = f.read()
+
+# Replace any overrides at the top or bottom
+css = re.sub(r'/\* No-Scroll Compact Workplace for Data Entry[\s\S]*', '', css)
+css = re.sub(r'/\* Standard Modern Responsive Layout System[\s\S]*', '', css)
+
+# Prepend the clean standard original CSS
+css = standard_original_css + "\n" + css
+
+with open('src/App.css', 'w', encoding='utf-8') as f:
+    f.write(css)
+
+print("Original standard balanced proportions restored.")
+
+# 2. Update DataEntry Header in App.jsx to original clean balanced header
+with open('src/App.jsx', 'r', encoding='utf-8') as f:
+    app_jsx = f.read()
+
+original_header = """      {/* Top Header */}
+      <div className="flex-between mb-4 flex-wrap gap-4">
+        <div>
+          <h1 style={{ margin: 0 }}>บันทึกข้อมูลรายวัน</h1>
+          <p className="text-muted" style={{ margin: '4px 0 0 0', fontSize: '0.9rem' }}>
+            เลือกบริษัทและวันที่ แล้วกรอกจำนวนชิ้นและยอดเงิน
+          </p>
+        </div>
+        <div className="flex-form-controls" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <select 
+            className="input-select" 
+            value={selectedCompany} 
+            onChange={e => handleSelectCompany(e.target.value)}
+            style={{ fontWeight: 600, minWidth: '220px' }}
+          >
+            {entryCompanies.map(c => (
+              <option key={c.id} value={c.id}>
+                {c.code ? `[${c.code}] ` : ''}{c.name}
+              </option>
+            ))}
+          </select>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <button 
+              type="button" 
+              className="btn btn-secondary" 
+              onClick={() => handleShiftDate(-1)} 
+              title="วันก่อนหน้า"
+              style={{ padding: '6px 10px', fontSize: '0.85rem' }}
+            >
+              ◀
+            </button>
+            <ThaiDatePicker value={selectedDay} onChange={handleSelectDate} />
+            <button 
+              type="button" 
+              className="btn btn-secondary" 
+              onClick={() => handleShiftDate(1)} 
+              title="วันถัดไป"
+              style={{ padding: '6px 10px', fontSize: '0.85rem' }}
+            >
+              ▶
+            </button>
+            <button 
+              type="button" 
+              className="btn btn-secondary" 
+              onClick={() => handleSelectDate(getSmartDefaultDate())} 
+              title="ไปยังวันทำการล่าสุด/วันนี้"
+              style={{ padding: '6px 10px', fontSize: '0.85rem' }}
+            >
+              วันนี้
+            </button>
+          </div>
+        </div>
+      </div>"""
+
+# Replace compact header if present
+compact_header_regex = r'\{\/\* Top Consolidated Single-Row Header \*\/\}[\s\S]*?<\/div>\s*<\/div>\s*<\/div>'
+if 'Top Consolidated Single-Row Header' in app_jsx:
+    app_jsx = re.sub(compact_header_regex, original_header, app_jsx)
+    with open('src/App.jsx', 'w', encoding='utf-8') as f:
+        f.write(app_jsx)
+    print("DataEntry top header restored.")
