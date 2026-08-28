@@ -1,0 +1,422 @@
+[
+  {
+    "date": "2026-04-29",
+    "companyId": "h0267",
+    "machineRemaining": 19384,
+    "machineAccumulated": 8910016,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-29",
+    "companyId": "h0128",
+    "machineRemaining": 17141.7,
+    "machineAccumulated": 7797885.3,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-01",
+    "companyId": "h0128",
+    "machineRemaining": 26036.7,
+    "machineAccumulated": 7788963.3,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-01",
+    "companyId": "h0032",
+    "machineRemaining": 2815.52,
+    "machineAccumulated": 3433484.48,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-01",
+    "companyId": "h0267",
+    "machineRemaining": 35359.0,
+    "machineAccumulated": 8804041.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-02",
+    "companyId": "h0128",
+    "machineRemaining": 25701.7,
+    "machineAccumulated": 7789298.3,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-02",
+    "companyId": "h0267",
+    "machineRemaining": 13959.0,
+    "machineAccumulated": 8825441.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-03",
+    "companyId": "h0128",
+    "machineRemaining": 25416.7,
+    "machineAccumulated": 7789583.3,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-03",
+    "companyId": "h0267",
+    "machineRemaining": 35979.0,
+    "machineAccumulated": 8833421.0,
+    "topUpAmount": 29179
+  },
+  {
+    "date": "2026-04-03",
+    "companyId": "h0130",
+    "machineRemaining": 3701.0,
+    "machineAccumulated": 2493298.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-07",
+    "companyId": "h0032",
+    "machineRemaining": 2736.52,
+    "machineAccumulated": 3433563.48,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-07",
+    "companyId": "h0130",
+    "machineRemaining": 3445.0,
+    "machineAccumulated": 2493554.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-07",
+    "companyId": "h0128",
+    "machineRemaining": 25049.7,
+    "machineAccumulated": 7789950.3,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-08",
+    "companyId": "h0128",
+    "machineRemaining": 24850.7,
+    "machineAccumulated": 7790149.3,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-08",
+    "companyId": "h0130",
+    "machineRemaining": 3015.0,
+    "machineAccumulated": 2493984.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-07",
+    "companyId": "h0267",
+    "machineRemaining": 33880.0,
+    "machineAccumulated": 8835520.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-08",
+    "companyId": "h0267",
+    "machineRemaining": 31903.0,
+    "machineAccumulated": 8837497.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-09",
+    "companyId": "h0032",
+    "machineRemaining": 2252.52,
+    "machineAccumulated": 3434047.48,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-09",
+    "companyId": "h0128",
+    "machineRemaining": 24505.7,
+    "machineAccumulated": 7790494.3,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-09",
+    "companyId": "h0130",
+    "machineRemaining": 2574.0,
+    "machineAccumulated": 2494425.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-09",
+    "companyId": "h0267",
+    "machineRemaining": 30465.0,
+    "machineAccumulated": 8838935.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-10",
+    "companyId": "h0267",
+    "machineRemaining": 16272.0,
+    "machineAccumulated": 8853128.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-10",
+    "companyId": "h0130",
+    "machineRemaining": 1257.8,
+    "machineAccumulated": 2495742.2,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-10",
+    "companyId": "h0128",
+    "machineRemaining": 23991.7,
+    "machineAccumulated": 7791008.3,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-16",
+    "companyId": "h0128",
+    "machineRemaining": 23483.7,
+    "machineAccumulated": 7791516.3,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-16",
+    "companyId": "h0267",
+    "machineRemaining": 5619.0,
+    "machineAccumulated": 8863781.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-17",
+    "companyId": "h0130",
+    "machineRemaining": 10288.8,
+    "machineAccumulated": 2496711.2,
+    "topUpAmount": 9391
+  },
+  {
+    "date": "2026-04-17",
+    "companyId": "h0267",
+    "machineRemaining": 33721.0,
+    "machineAccumulated": 8865679.0,
+    "topUpAmount": 28887
+  },
+  {
+    "date": "2026-04-17",
+    "companyId": "h0128",
+    "machineRemaining": 22466.7,
+    "machineAccumulated": 7792533.3,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-20",
+    "companyId": "h0128",
+    "machineRemaining": 20911.7,
+    "machineAccumulated": 7794088.3,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-20",
+    "companyId": "h0130",
+    "machineRemaining": 10009.0,
+    "machineAccumulated": 2496990.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-20",
+    "companyId": "h0267",
+    "machineRemaining": 30377.0,
+    "machineAccumulated": 8869023.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-21",
+    "companyId": "h0032",
+    "machineRemaining": 2151.52,
+    "machineAccumulated": 3834148.48,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-21",
+    "companyId": "h0128",
+    "machineRemaining": 20224.7,
+    "machineAccumulated": 7794775.3,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-21",
+    "companyId": "h0130",
+    "machineRemaining": 9417.0,
+    "machineAccumulated": 2497582.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-21",
+    "companyId": "h0267",
+    "machineRemaining": 21059.0,
+    "machineAccumulated": 8878341.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-22",
+    "companyId": "h0128",
+    "machineRemaining": 19768.7,
+    "machineAccumulated": 7795231.3,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-22",
+    "companyId": "h0130",
+    "machineRemaining": 8973.0,
+    "machineAccumulated": 2498026.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-22",
+    "companyId": "h0267",
+    "machineRemaining": 9308.0,
+    "machineAccumulated": 8890092.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-23",
+    "companyId": "h0128",
+    "machineRemaining": 18550.7,
+    "machineAccumulated": 7796449.3,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-23",
+    "companyId": "h0130",
+    "machineRemaining": 8527.0,
+    "machineAccumulated": 2498472.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-23",
+    "companyId": "h0267",
+    "machineRemaining": 37952.0,
+    "machineAccumulated": 8891448.0,
+    "topUpAmount": 30000
+  },
+  {
+    "date": "2026-04-24",
+    "companyId": "h0032",
+    "machineRemaining": 1890.52,
+    "machineAccumulated": 3834408.48,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-24",
+    "companyId": "h0128",
+    "machineRemaining": 18194.7,
+    "machineAccumulated": 7796805.3,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-24",
+    "companyId": "h0130",
+    "machineRemaining": 8346.0,
+    "machineAccumulated": 2498653.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-24",
+    "companyId": "h0267",
+    "machineRemaining": 30229.0,
+    "machineAccumulated": 8899171.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-27",
+    "companyId": "h0128",
+    "machineRemaining": 18017.7,
+    "machineAccumulated": 7796982.3,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-27",
+    "companyId": "h0130",
+    "machineRemaining": 7968.0,
+    "machineAccumulated": 2499031.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-27",
+    "companyId": "h0267",
+    "machineRemaining": 22276.0,
+    "machineAccumulated": 8907124.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-28",
+    "companyId": "h0032",
+    "machineRemaining": 1578.52,
+    "machineAccumulated": 3834729.48,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-28",
+    "companyId": "h0267",
+    "machineRemaining": 21680.0,
+    "machineAccumulated": 8907720.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-28",
+    "companyId": "h0130",
+    "machineRemaining": 7512.0,
+    "machineAccumulated": 2499487.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-28",
+    "companyId": "h0128",
+    "machineRemaining": 17630.7,
+    "machineAccumulated": 7797369.3,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-30",
+    "companyId": "h0267",
+    "machineRemaining": 18535.0,
+    "machineAccumulated": 8910865.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-30",
+    "companyId": "h0128",
+    "machineRemaining": 16117.7,
+    "machineAccumulated": 7798882.3,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-04-30",
+    "companyId": "h0130",
+    "machineRemaining": 6770.0,
+    "machineAccumulated": 2500229.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-05-29",
+    "companyId": "h0267",
+    "machineRemaining": 2230.0,
+    "machineAccumulated": 8987170.0,
+    "topUpAmount": 0
+  },
+  {
+    "date": "2026-05-29",
+    "companyId": "h0130",
+    "machineRemaining": 8528.8,
+    "machineAccumulated": 2508471.2,
+    "topUpAmount": 1758.7999999999993
+  },
+  {
+    "date": "2026-05-29",
+    "companyId": "h0128",
+    "machineRemaining": 2605.5,
+    "machineAccumulated": 7812394.5,
+    "topUpAmount": 0.0
+  },
+  {
+    "date": "2026-05-28",
+    "companyId": "h0032",
+    "machineRemaining": 390.54,
+    "machineAccumulated": 3835909.48,
+    "topUpAmount": 0.0
+  }
+]
