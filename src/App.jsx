@@ -1609,7 +1609,6 @@ const DataEntry = () => {
     return dailyTotalAmount;
   }, [subItems, formData.amount, dailyTotalAmount]);
 
-  const [showManualTopUp, setShowManualTopUp] = useState(false);
 
   const validation = useMemo(() => {
     const totalAmount = currentEnteredOrDailyTotal;
@@ -2052,16 +2051,6 @@ const DataEntry = () => {
                     }
                   }}
                 />
-                {!validation.remValid && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
-                    <span className="text-danger" style={{ fontSize: '0.75rem' }}>
-                      * ควรเป็น {(validation.expectedRem + (Number(formData.topUpAmount) || 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </span>
-                    <button type="button" className="btn-autofill-reading" onClick={handleAutoFillExpected}>
-                      ⚡ ใส่อัตโนมัติ
-                    </button>
-                  </div>
-                )}
               </div>
               <div className="form-group">
                 <label>ยอดสะสม (แถวล่าง)</label>
@@ -2071,7 +2060,6 @@ const DataEntry = () => {
                   value={formData.machineMixed} 
                   onChange={e => setFormData({...formData, machineMixed: e.target.value})}
                   placeholder="0.00"
-                  className={!validation.accValid ? 'input-error' : ''}
                   onKeyDown={e => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -2079,30 +2067,44 @@ const DataEntry = () => {
                     }
                   }}
                 />
-                {!validation.accValid && validation.expectedAcc !== null && (
-                  <p className="text-danger" style={{ fontSize: '0.75rem', marginTop: '4px' }}>
-                    * ควรเป็น {validation.expectedAcc.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                  </p>
-                )}
               </div>
             </div>
 
-            {(topUpCalculation > 0 || formData.manualTopUp) && (
-              <div className="form-group fade-in" style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--primary)' }}>
-                <label style={{ color: 'var(--primary)', fontWeight: 'bold' }}>✨ ตรวจพบยอดเติมเงิน (คาดการณ์)</label>
-                <input 
-                  type="number" 
-                  value={formData.topUpAmount} 
-                  onChange={e => setFormData({...formData, topUpAmount: e.target.value, manualTopUp: true})}
-                  placeholder="0.00"
-                  className="input-select full"
-                  style={{ marginTop: '0.5rem', borderColor: 'var(--primary)' }}
-                />
-                <p style={{ fontSize: '0.75rem', marginTop: '4px', color: 'var(--text-muted)' }}>
-                  * ระบบคำนวณเบื้องต้นให้ {topUpCalculation.toLocaleString()} บาท (แก้ไขได้)
-                </p>
-              </div>
-            )}
+            {/* Optional Separate Top-Up Toggle */}
+            <div style={{ marginTop: '0.25rem', marginBottom: '0.75rem' }}>
+              {!showManualTopUp ? (
+                <button
+                  type="button"
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}
+                  onClick={() => setShowManualTopUp(true)}
+                >
+                  <span>➕ มีการเติมเงินเข้าเครื่องในวันนี้ (คลิกเพื่อระบุยอดเติมเงินแยกต่างหาก)</span>
+                </button>
+              ) : (
+                <div className="fade-in" style={{ background: 'rgba(37, 99, 235, 0.05)', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid rgba(37, 99, 235, 0.2)' }}>
+                  <div className="flex-between mb-2">
+                    <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--primary)' }}>💰 ยอดเติมเงินเข้าเครื่อง (บาท)</label>
+                    <button
+                      type="button"
+                      style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '0.78rem', cursor: 'pointer' }}
+                      onClick={() => {
+                        setShowManualTopUp(false);
+                        setFormData(prev => ({ ...prev, topUpAmount: '' }));
+                      }}
+                    >
+                      ยกเลิก / ไม่ระบุ
+                    </button>
+                  </div>
+                  <input 
+                    type="number" 
+                    value={formData.topUpAmount} 
+                    onChange={e => setFormData({...formData, topUpAmount: e.target.value})}
+                    placeholder="0.00"
+                    className="input-select full"
+                  />
+                </div>
+              )}
+            </div>
 
             <button className="btn btn-primary full py-3" onClick={saveRecord}>
               <Save size={18}/> บันทึกรายการ
