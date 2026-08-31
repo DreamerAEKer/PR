@@ -4169,7 +4169,7 @@ const Navigation = ({ view, setView }) => {
         </div>
 
         <div className="nav-footer" style={{ padding: '0.6rem 1rem', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-          Version 1.5.0
+          Version 1.5.1
         </div>
       </div>
     </nav>
