@@ -2072,28 +2072,58 @@ const DataEntry = () => {
             </div>
 
             {/* Optional Separate Top-Up Toggle */}
-            <div style={{ marginTop: '0.25rem', marginBottom: '0.75rem' }}>
+            <div style={{ marginTop: '0.5rem', marginBottom: '0.75rem' }}>
               {!showManualTopUp ? (
                 <button
                   type="button"
-                  style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}
+                  style={{
+                    width: '100%',
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px dashed var(--glass-border)',
+                    borderRadius: '8px',
+                    color: 'var(--text-muted)',
+                    fontSize: '0.84rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '8px 12px',
+                    transition: 'all 0.2s'
+                  }}
                   onClick={() => setShowManualTopUp(true)}
                 >
-                  <span>➕ มีการเติมเงินเข้าเครื่องในวันนี้ (คลิกเพื่อระบุยอดเติมเงินแยกต่างหาก)</span>
+                  <span>➕ ระบุยอดเติมเงินเข้าเครื่องในวันนี้ (ถ้ามี)</span>
+                  <ChevronDown size={15} />
                 </button>
               ) : (
-                <div className="fade-in" style={{ background: 'rgba(37, 99, 235, 0.05)', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid rgba(37, 99, 235, 0.2)' }}>
-                  <div className="flex-between mb-2">
-                    <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--primary)' }}>💰 ยอดเติมเงินเข้าเครื่อง (บาท)</label>
+                <div className="fade-in" style={{ background: 'rgba(37, 99, 235, 0.06)', padding: '0.75rem 1rem', borderRadius: '10px', border: '1px solid rgba(37, 99, 235, 0.3)' }}>
+                  <div 
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}
+                  >
+                    <label style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      💰 ยอดเติมเงินเข้าเครื่อง (บาท)
+                    </label>
                     <button
                       type="button"
-                      style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '0.78rem', cursor: 'pointer' }}
+                      style={{
+                        background: 'rgba(239, 68, 68, 0.12)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        color: '#ef4444',
+                        fontSize: '0.78rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
                       onClick={() => {
                         setShowManualTopUp(false);
                         setFormData(prev => ({ ...prev, topUpAmount: '' }));
                       }}
                     >
-                      ยกเลิก / ไม่ระบุ
+                      <X size={14} /> ย่อเก็บ / ยกเลิก
                     </button>
                   </div>
                   <input 
@@ -2102,6 +2132,7 @@ const DataEntry = () => {
                     onChange={e => setFormData({...formData, topUpAmount: e.target.value})}
                     placeholder="0.00"
                     className="input-select full"
+                    style={{ fontSize: '0.95rem', padding: '8px 10px' }}
                   />
                 </div>
               )}
@@ -4172,7 +4203,7 @@ const Navigation = ({ view, setView }) => {
         </div>
 
         <div className="nav-footer" style={{ padding: '0.6rem 1rem', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-          Version 1.5.3
+          Version 1.5.4
         </div>
       </div>
     </nav>
