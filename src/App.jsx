@@ -2383,6 +2383,7 @@ const Reports = ({ setView }) => {
   } = useApp();
   const [missingReadings, setMissingReadings] = useState([]);
   const [showWarningModal, setShowWarningModal] = useState(false);
+  const [missingMeterDetail, setMissingMeterDetail] = useState(null);
   const [reportMonth, setReportMonth] = useState(() => {
     const today = new Date();
     return new Date(today.getFullYear(), today.getMonth() - 1, 1);
@@ -3109,12 +3110,28 @@ const Reports = ({ setView }) => {
                   const count = companyRecords.reduce((sum, r) => sum + (Number(r.count) || 0), 0);
                   const amount = companyRecords.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
                   
-                  const latestRecordWithMachineStatus = [...companyRecords]
-                    .sort((a, b) => new Date(b.date) - new Date(a.date))
+                  const sortedRecordsByDate = [...companyRecords].sort((a, b) => new Date(b.date) - new Date(a.date));
+                  const latestRecord = sortedRecordsByDate.length > 0 ? sortedRecordsByDate[0] : null;
+                  const latestDate = latestRecord?.date;
+
+                  const dayMap = {};
+                  sortedRecordsByDate.forEach(r => {
+                    if (r && r.date) {
+                      if (!dayMap[r.date]) {
+                        dayMap[r.date] = { date: r.date, count: 0, amount: 0 };
+                      }
+                      dayMap[r.date].count += Number(r.count) || 0;
+                      dayMap[r.date].amount += Number(r.amount) || 0;
+                    }
+                  });
+                  const dayBreakdown = Object.values(dayMap).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                  const latestRecordWithMachineStatus = sortedRecordsByDate
                     .find(r => r.machineRemaining !== null || r.machineAccumulated !== null);
                     
                   const remaining = latestRecordWithMachineStatus?.machineRemaining;
                   const accumulated = latestRecordWithMachineStatus?.machineAccumulated;
+                  const isMissingMachine = amount > 0 && (remaining == null || accumulated == null);
                   
                   return (
                     <tr key={officialCompany.id}>
@@ -3122,8 +3139,47 @@ const Reports = ({ setView }) => {
                       <td style={{ textAlign: 'left', fontSize: officialName.length > 30 ? '0.75rem' : '0.85rem', paddingLeft: '8px', whiteSpace: 'nowrap' }}>{officialName || '-'}</td>
                       <td className="num">{count > 0 ? count.toLocaleString() : ''}</td>
                       <td className="num">{amount > 0 ? amount.toLocaleString(undefined, { minimumFractionDigits: 2 }) : ''}</td>
-                      <td className="num" style={{ fontSize: '0.85rem' }}>{remaining != null ? remaining.toLocaleString(undefined, { minimumFractionDigits: 2 }) : ''}</td>
-                      <td className="num" style={{ fontSize: '0.85rem' }}>{accumulated != null ? accumulated.toLocaleString(undefined, { minimumFractionDigits: 2 }) : ''}</td>
+                      <td className="num" style={{ fontSize: '0.85rem' }}>
+                        {remaining != null ? (
+                          remaining.toLocaleString(undefined, { minimumFractionDigits: 2 })
+                        ) : isMissingMachine && latestDate ? (
+                          <button
+                            type="button"
+                            className="btn-missing-meter no-print"
+                            onClick={() => setMissingMeterDetail({
+                              company: officialCompany,
+                              latestDate,
+                              dayBreakdown,
+                              count,
+                              amount
+                            })}
+                            title={`คลิกเพื่อดูวันที่คีย์ล่าสุด (${safeFormat(latestDate, 'd MMM yyyy', { locale: th })}) และไปกรอกยอดเครื่อง`}
+                          >
+                            <AlertCircle size={12} />
+                            <span>คีย์ล่าสุด: {safeFormat(latestDate, 'd MMM', { locale: th })}</span>
+                          </button>
+                        ) : ''}
+                      </td>
+                      <td className="num" style={{ fontSize: '0.85rem' }}>
+                        {accumulated != null ? (
+                          accumulated.toLocaleString(undefined, { minimumFractionDigits: 2 })
+                        ) : isMissingMachine && latestDate ? (
+                          <button
+                            type="button"
+                            className="btn-missing-meter no-print"
+                            onClick={() => setMissingMeterDetail({
+                              company: officialCompany,
+                              latestDate,
+                              dayBreakdown,
+                              count,
+                              amount
+                            })}
+                            title={`คลิกเพื่อดูวันที่คีย์ล่าสุด (${safeFormat(latestDate, 'd MMM yyyy', { locale: th })}และไปกรอกยอดเครื่อง`}
+                          >
+                            <span>[ ✏️ เติมยอด ]</span>
+                          </button>
+                        ) : ''}
+                      </td>
                     </tr>
                   );
                 })}
