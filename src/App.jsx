@@ -3363,6 +3363,82 @@ const Reports = ({ setView }) => {
           </div>
         </div>
       )}
+
+      {/* Missing Meter Helper Modal */}
+      {missingMeterDetail && (
+        <div className="missing-meter-modal-overlay" onClick={() => setMissingMeterDetail(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999, padding: '1rem' }}>
+          <div className="missing-meter-modal" onClick={e => e.stopPropagation()} style={{ background: 'var(--card-bg)', border: '1px solid var(--glass-border)', borderRadius: '16px', maxWidth: '520px', width: '100%', padding: '1.5rem', boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}>
+            <div className="flex-between mb-4">
+              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', color: '#dc2626', fontSize: '1.15rem' }}>
+                <AlertCircle size={22} />
+                <span>วันที่คีย์ล่าสุด (ที่ยังขาดยอดเครื่อง)</span>
+              </h3>
+              <button type="button" className="btn-icon" onClick={() => setMissingMeterDetail(null)} style={{ fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            </div>
+
+            <div style={{ background: 'rgba(255,255,255,0.04)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--glass-border)', marginBottom: '1rem' }}>
+              <div style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '6px' }}>
+                🏢 {missingMeterDetail.company.code ? `[${missingMeterDetail.company.code}] ` : ''}{missingMeterDetail.company.name}
+              </div>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>
+                ยอดรวมทั้งเดือน: <strong>{missingMeterDetail.count.toLocaleString()} ชิ้น</strong> | <strong>฿{missingMeterDetail.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })} บาท</strong>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '1.25rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                📅 วันที่พบคีย์รายการล่าสุดในเดือนนี้:
+              </label>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(37, 99, 235, 0.12)', color: '#2563eb', border: '1px solid rgba(37, 99, 235, 0.3)', padding: '8px 14px', borderRadius: '20px', fontSize: '0.95rem', fontWeight: 700 }}>
+                <Calendar size={18} />
+                <span>
+                  {missingMeterDetail.latestDate 
+                    ? safeFormat(missingMeterDetail.latestDate, 'EEEEที่ d MMMM yyyy', { locale: th })
+                    : 'ไม่พบวันที่'}
+                </span>
+              </div>
+            </div>
+
+            {/* Breakdown of days in this month */}
+            {missingMeterDetail.dayBreakdown && missingMeterDetail.dayBreakdown.length > 0 && (
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                  🗓️ วันที่มีรายการคีย์ทั้งหมดในเดือนนี้ ({missingMeterDetail.dayBreakdown.length} วัน):
+                </label>
+                <div style={{ maxHeight: '120px', overflowY: 'auto', background: 'rgba(0,0,0,0.1)', borderRadius: '8px', padding: '6px 10px', fontSize: '0.82rem' }}>
+                  {missingMeterDetail.dayBreakdown.map((d, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: i < missingMeterDetail.dayBreakdown.length - 1 ? '1px dashed rgba(255,255,255,0.08)' : 'none' }}>
+                      <span>• {safeFormat(d.date, 'd MMMM yyyy', { locale: th })}</span>
+                      <span><strong>{d.count} ชิ้น</strong> (฿{d.amount.toFixed(2)})</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '10px', marginTop: '1.5rem' }}>
+              <button
+                type="button"
+                className="btn btn-primary full"
+                onClick={() => {
+                  if (missingMeterDetail.latestDate) {
+                    setNavigationTarget({
+                      companyId: missingMeterDetail.company.id,
+                      date: missingMeterDetail.latestDate
+                    });
+                    setView('entry');
+                    setMissingMeterDetail(null);
+                  }
+                }}
+                style={{ background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', padding: '0.8rem', fontSize: '0.92rem', fontWeight: 700 }}
+              >
+                ✏️ ไปที่หน้าบันทึกข้อมูลของวันที่ {safeFormat(missingMeterDetail.latestDate, 'd MMM yyyy', { locale: th })} (เพื่อกรอกยอดเครื่อง)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
