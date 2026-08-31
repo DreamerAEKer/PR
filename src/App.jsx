@@ -12,7 +12,7 @@ import { Cloud, CloudUpload, CloudDownload, CloudCheck, CloudOff } from 'lucide-
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
-import { LayoutDashboard, Settings, FileText, PlusCircle, Printer, Trash2, ChevronLeft, ChevronRight, Save, Edit2, Check, X, Download, Upload, ChevronUp, ChevronDown, ArrowRightLeft, Building2, Sparkles, Star, Search, RefreshCw, CheckCircle2, Calculator, MinusCircle, AlertTriangle, ShieldAlert, Copy, ExternalLink, HardDrive } from 'lucide-react';
+import { LayoutDashboard, Settings, FileText, PlusCircle, Printer, Trash2, ChevronLeft, ChevronRight, Save, Edit2, Check, X, Download, Upload, ChevronUp, ChevronDown, ArrowRightLeft, Building2, Sparkles, Star, Search, RefreshCw, CheckCircle2, Calculator, MinusCircle, AlertTriangle, AlertCircle, Calendar, Info, ShieldAlert, Copy, ExternalLink, HardDrive } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, subDays, isWeekend } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
