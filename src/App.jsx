@@ -1609,24 +1609,7 @@ const DataEntry = () => {
     return dailyTotalAmount;
   }, [subItems, formData.amount, dailyTotalAmount]);
 
-  const topUpCalculation = useMemo(() => {
-    if (!formData.machineRemaining || machineContext.rem === null || !currentEnteredOrDailyTotal) return 0;
-    const currentRem = Number(formData.machineRemaining);
-    const expectedRem = machineContext.rem - Number(currentEnteredOrDailyTotal);
-    
-    if (currentRem > expectedRem) {
-      return currentRem - expectedRem;
-    }
-    return 0;
-  }, [formData.machineRemaining, currentEnteredOrDailyTotal, machineContext]);
-
-  useEffect(() => {
-    if (topUpCalculation > 0 && formData.topUpAmount !== topUpCalculation) {
-      setFormData(prev => ({ ...prev, topUpAmount: topUpCalculation }));
-    } else if (topUpCalculation === 0 && formData.topUpAmount && !formData.manualTopUp) {
-      setFormData(prev => ({ ...prev, topUpAmount: '' }));
-    }
-  }, [topUpCalculation, formData.topUpAmount, formData.manualTopUp]);
+  const [showManualTopUp, setShowManualTopUp] = useState(false);
 
   const validation = useMemo(() => {
     const totalAmount = currentEnteredOrDailyTotal;
