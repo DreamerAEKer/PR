@@ -119,6 +119,8 @@ export const AppProvider = ({ children }) => {
   });
 
   const [records, setRecords] = useState([]);
+  const [deletedRecords, setDeletedRecords] = useState([]);
+  const [lastSavedAt, setLastSavedAt] = useState(() => localStorage.getItem('postage_last_saved_at') || '');
   const [primaryLocation, setPrimaryLocationState] = useState(() => {
     return localStorage.getItem('postage_primary_location') || '';
   });
@@ -130,6 +132,7 @@ export const AppProvider = ({ children }) => {
 
   useEffect(() => {
     async function loadStorage() {
+      let idbRecords = [];
       try {
         const standardCompanies = [
           { id: 'h0032', name: 'บ.เอเชี่ยนฮอนด้าคอมเมอร์ส จก.', code: 'H0032', order: 1, showInEntry: true, showInReport: true, isQuickSelect: true },
@@ -228,14 +231,84 @@ export const AppProvider = ({ children }) => {
           return changed ? updated : prev;
         });
 
-        let idbRecords = await get('postage_records');
+        const rawIdbRecords = await get('postage_records');
         let idbMachineReadings = await get('postage_machine_readings');
 
-        // Migration from localStorage
-        if (!idbRecords) {
+        let loadedDeleted = await get('postage_deleted_records');
+        if (!Array.isArray(loadedDeleted)) {
+          try {
+            const localDelStr = localStorage.getItem('postage_deleted_records');
+            if (localDelStr) {
+              const parsedDel = JSON.parse(localDelStr);
+              if (Array.isArray(parsedDel)) loadedDeleted = parsedDel;
+            }
+          } catch (e) {
+            console.error('Failed to parse localStorage deleted records:', e);
+          }
+        }
+        if (Array.isArray(loadedDeleted)) {
+          setDeletedRecords(loadedDeleted);
+        }
+
+        let localRecords = [];
+        try {
           const localRecordsStr = localStorage.getItem('postage_records');
           if (localRecordsStr) {
-            idbRecords = JSON.parse(localRecordsStr);
+            const parsedLocal = JSON.parse(localRecordsStr);
+            if (Array.isArray(parsedLocal)) localRecords = parsedLocal;
+          }
+        } catch (e) {
+          console.error('Failed to parse localStorage records:', e);
+        }
+
+        if (localRecords.length === 0 && (!Array.isArray(rawIdbRecords) || rawIdbRecords.length === 0)) {
+          try {
+            const backupStr = localStorage.getItem('postage_records_backup_latest');
+            if (backupStr) {
+              const parsedBackup = JSON.parse(backupStr);
+              if (parsedBackup && Array.isArray(parsedBackup.records)) {
+                localRecords = parsedBackup.records;
+              }
+            }
+          } catch (e) {}
+        }
+
+        const recordMergeKey = (r) => {
+          if (!r) return '';
+          if (r.timestamp != null) return `ts:${r.timestamp}`;
+          return [r.date, r.companyId, r.serviceId, r.count, r.amount].join('|');
+        };
+
+        const deletedKeySet = new Set(
+          (Array.isArray(loadedDeleted) ? loadedDeleted : [])
+            .filter(Boolean)
+            .map(recordMergeKey)
+        );
+
+        if (Array.isArray(rawIdbRecords) && rawIdbRecords.length > 0) {
+          if (localRecords.length > 0) {
+            const localKeys = new Set(localRecords.filter(Boolean).map(recordMergeKey));
+            const filteredIdb = rawIdbRecords.filter(r => {
+              if (!r) return false;
+              const k = recordMergeKey(r);
+              return localKeys.has(k) || !deletedKeySet.has(k);
+            });
+            const idbKeys = new Set(filteredIdb.map(recordMergeKey));
+            const unsyncedLocal = localRecords.filter(r => r && !idbKeys.has(recordMergeKey(r)));
+            idbRecords = unsyncedLocal.length > 0 ? [...filteredIdb, ...unsyncedLocal] : filteredIdb;
+            if (unsyncedLocal.length > 0 || filteredIdb.length !== rawIdbRecords.length) {
+              await set('postage_records', idbRecords);
+            }
+          } else {
+            idbRecords = rawIdbRecords;
+          }
+        } else if (localRecords.length > 0) {
+          idbRecords = localRecords;
+          await set('postage_records', idbRecords);
+        } else {
+          const idbBackup = await get('postage_records_backup_latest');
+          if (idbBackup && Array.isArray(idbBackup.records) && idbBackup.records.length > 0) {
+            idbRecords = idbBackup.records;
             await set('postage_records', idbRecords);
           } else {
             idbRecords = [];
@@ -245,8 +318,12 @@ export const AppProvider = ({ children }) => {
         if (!idbMachineReadings) {
           const localMRStr = localStorage.getItem('postage_machine_readings');
           if (localMRStr) {
-            idbMachineReadings = JSON.parse(localMRStr);
-            await set('postage_machine_readings', idbMachineReadings);
+            try {
+              idbMachineReadings = JSON.parse(localMRStr);
+              await set('postage_machine_readings', idbMachineReadings);
+            } catch (e) {
+              idbMachineReadings = [];
+            }
           } else {
             // Legacy Migration from records on first load
             const grouped = {};
@@ -354,18 +431,57 @@ export const AppProvider = ({ children }) => {
 
   useEffect(() => {
     if (!isStorageLoaded) return;
+    try {
+      localStorage.setItem('postage_records', JSON.stringify(records));
+      localStorage.setItem('postage_records_backup_latest', JSON.stringify({
+        savedAt: new Date().toISOString(),
+        count: records.length,
+        records
+      }));
+    } catch (e) {
+      console.warn('localStorage mirror warning (quota/privacy mode):', e);
+    }
     set('postage_records', records).catch(e => {
       console.error('Failed to save records to IndexedDB:', e);
       alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง');
     });
+    set('postage_records_backup_latest', {
+      savedAt: new Date().toISOString(),
+      count: records.length,
+      records
+    }).catch(e => {
+      console.error('Failed to save backup records to IndexedDB:', e);
+    });
+    try {
+      const nowStr = format(new Date(), 'HH:mm:ss');
+      localStorage.setItem('postage_last_saved_at', nowStr);
+      setLastSavedAt(nowStr);
+    } catch (e) {}
   }, [records, isStorageLoaded]);
 
   useEffect(() => {
     if (!isStorageLoaded) return;
+    try {
+      localStorage.setItem('postage_machine_readings', JSON.stringify(machineReadings));
+    } catch (e) {
+      console.warn('Failed to mirror machine readings to localStorage:', e);
+    }
     set('postage_machine_readings', machineReadings).catch(e => {
       console.error('Failed to save machine readings to IndexedDB:', e);
     });
   }, [machineReadings, isStorageLoaded]);
+
+  useEffect(() => {
+    if (!isStorageLoaded) return;
+    try {
+      localStorage.setItem('postage_deleted_records', JSON.stringify(deletedRecords));
+    } catch (e) {
+      console.warn('Failed to save deleted records to localStorage:', e);
+    }
+    set('postage_deleted_records', deletedRecords).catch(e => {
+      console.error('Failed to save deleted records to IndexedDB:', e);
+    });
+  }, [deletedRecords, isStorageLoaded]);
 
   const addRecord = (newRecords) => {
     if (!newRecords || !Array.isArray(newRecords)) return;
@@ -394,18 +510,85 @@ export const AppProvider = ({ children }) => {
     setCompanies(prev => prev.map(c => c.id === id ? { ...c, ...updated } : c));
   };
 
-  const deleteSingleRecord = (serviceId, date, companyId, timestamp) => {
-    setRecords(prev => prev.filter(r => {
-      if (timestamp && r.timestamp && String(r.timestamp) === String(timestamp)) return false;
-      if (String(r.serviceId) === String(serviceId) && String(r.date) === String(date) && String(r.companyId) === String(companyId)) {
-        if (!timestamp || !r.timestamp) return false;
-      }
-      return true;
+  const pushToTrash = (removedItems) => {
+    if (!removedItems || removedItems.length === 0) return;
+    const now = Date.now();
+    const trashEntries = removedItems.map((item, idx) => ({
+      ...item,
+      deletedAt: now,
+      trashId: `${now}_${idx}_${Math.random().toString(36).slice(2, 7)}`
     }));
+    setDeletedRecords(prev => {
+      const next = [...trashEntries, ...(Array.isArray(prev) ? prev : [])].slice(0, 50);
+      try {
+        localStorage.setItem('postage_deleted_records', JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
+  };
+
+  const deleteSingleRecord = (serviceId, date, companyId, timestamp) => {
+    const shouldRemove = (r) => {
+      if (!r) return false;
+      if (timestamp && r.timestamp && String(r.timestamp) === String(timestamp)) return true;
+      if (String(r.serviceId) === String(serviceId) && String(r.date) === String(date) && String(r.companyId) === String(companyId)) {
+        if (!timestamp || !r.timestamp) return true;
+      }
+      return false;
+    };
+    const removed = (records || []).filter(shouldRemove);
+    if (removed.length > 0) {
+      pushToTrash(removed);
+    }
+    setRecords(prev => prev.filter(r => !shouldRemove(r)));
   };
 
   const deleteRecords = (date, companyId) => {
+    const removed = (records || []).filter(r => r && r.date === date && r.companyId === companyId);
+    if (removed.length > 0) {
+      pushToTrash(removed);
+    }
     setRecords(prev => prev.filter(r => !(r.date === date && r.companyId === companyId)));
+  };
+
+  const restoreDeletedRecord = (trashItem) => {
+    if (!trashItem) return;
+    setDeletedRecords(prev => (prev || []).filter(item =>
+      trashItem.trashId ? item.trashId !== trashItem.trashId : item !== trashItem
+    ));
+    const { deletedAt, trashId, ...restoredRecord } = trashItem;
+    addRecord([{
+      ...restoredRecord,
+      timestamp: restoredRecord.timestamp || Date.now()
+    }]);
+  };
+
+  const updateSingleRecord = (originalRecord, updatedFields) => {
+    if (!originalRecord) return;
+    setRecords(prev => {
+      const current = Array.isArray(prev) ? prev : [];
+      let updated = false;
+      return current.map(r => {
+        if (!r || updated) return r;
+        const isMatch = (originalRecord.timestamp && r.timestamp && String(r.timestamp) === String(originalRecord.timestamp)) ||
+          (!originalRecord.timestamp &&
+            String(r.date) === String(originalRecord.date) &&
+            String(r.companyId) === String(originalRecord.companyId) &&
+            String(r.serviceId) === String(originalRecord.serviceId) &&
+            Number(r.count) === Number(originalRecord.count) &&
+            Number(r.amount) === Number(originalRecord.amount));
+        if (isMatch) {
+          updated = true;
+          return {
+            ...r,
+            ...updatedFields,
+            timestamp: r.timestamp || originalRecord.timestamp || Date.now(),
+            updatedAt: Date.now()
+          };
+        }
+        return r;
+      });
+    });
   };
 
   const addMachineReading = (reading) => {
@@ -662,7 +845,7 @@ export const AppProvider = ({ children }) => {
     <AppContext.Provider value={{
       services, setServices, updateService,
       companies, setCompanies, updateCompany, reorderCompaniesByCode, moveCompany, toggleCompanyQuickSelect,
-      records, setRecords, addRecord, deleteRecords, deleteSingleRecord, moveSingleRecord, moveDailyRecords, moveSingleRecordToCompany, moveDailyRecordsToCompany,
+      records, setRecords, addRecord, updateSingleRecord, deleteRecords, deleteSingleRecord, deletedRecords, restoreDeletedRecord, lastSavedAt, moveSingleRecord, moveDailyRecords, moveSingleRecordToCompany, moveDailyRecordsToCompany,
       machineReadings, setMachineReadings, addMachineReading, deleteMachineReading,
       exportData, importData,
       reportLogo, setReportLogo, reportLogoSize, setReportLogoSize, reportLogoAlign, setReportLogoAlign,
