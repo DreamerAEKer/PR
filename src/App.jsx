@@ -12,7 +12,7 @@ import { Cloud, CloudUpload, CloudDownload, CloudCheck, CloudOff } from 'lucide-
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
-import { LayoutDashboard, Settings, FileText, PlusCircle, Printer, Trash2, ChevronLeft, ChevronRight, Save, Edit2, Check, X, Download, Upload, ChevronUp, ChevronDown, ArrowRightLeft, Building2, Sparkles, Star, Search, RefreshCw, CheckCircle2, Calculator, MinusCircle, AlertTriangle, AlertCircle, Calendar, Info, ShieldAlert, ShieldCheck, Clock, RotateCcw, Copy, ExternalLink, HardDrive } from 'lucide-react';
+import { LayoutDashboard, Settings, FileText, PlusCircle, Printer, Trash2, ChevronLeft, ChevronRight, Save, Edit2, Check, X, Download, Upload, ChevronUp, ChevronDown, ArrowRightLeft, Building2, Sparkles, Star, Search, RefreshCw, CheckCircle2, Calculator, MinusCircle, AlertTriangle, AlertCircle, Calendar, Info, ShieldAlert, Clock, RotateCcw, Copy, ExternalLink, HardDrive } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, subDays, isWeekend } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
@@ -1155,8 +1155,8 @@ const SeparatedDepartmentDashboard = () => {
   );
 };
 
-const DataEntry = ({ setView }) => {
-  const { services, companies, records, addRecord, updateSingleRecord, deleteSingleRecord, deletedRecords, restoreDeletedRecord, lastSavedAt, exportData, moveSingleRecord, moveDailyRecords, moveSingleRecordToCompany, moveDailyRecordsToCompany, navigationTarget, setNavigationTarget } = useApp();
+const DataEntry = () => {
+  const { services, companies, records, addRecord, updateSingleRecord, deleteSingleRecord, deletedRecords, restoreDeletedRecord, moveSingleRecord, moveDailyRecords, moveSingleRecordToCompany, moveDailyRecordsToCompany, navigationTarget, setNavigationTarget } = useApp();
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(getSmartDefaultDate());
   const [selectedCompany, setSelectedCompany] = useState(companies[0]?.id || '');
@@ -1173,10 +1173,7 @@ const DataEntry = ({ setView }) => {
   const [showBillSplitter, setShowBillSplitter] = useState(true);
   const [showManualTopUp, setShowManualTopUp] = useState(false);
 
-  // Sequential Keying History & Quick Edit state
-  const [keyHistoryScope, setKeyHistoryScope] = useState('all');
-  const [keyHistoryLimit, setKeyHistoryLimit] = useState(10);
-  const [keyHistorySearch, setKeyHistorySearch] = useState('');
+  // Rolling 10-item Re-Check & Quick Edit state
   const [showTrashList, setShowTrashList] = useState(false);
   const [quickEditModal, setQuickEditModal] = useState({ isOpen: false, record: null, form: {} });
 
@@ -1392,62 +1389,38 @@ const DataEntry = ({ setView }) => {
       .slice(0, 7);
   }, [records, selectedCompany]);
 
-  // Sequential keying history across entries (chronological by keying order, newest first)
-  const chronologicalKeyHistory = useMemo(() => {
+  // Lightweight rolling 10 most recently keyed records (for quick company/date re-check)
+  const recentKeyedRecords = useMemo(() => {
     const valid = (records || [])
       .map((r, originalIdx) => ({ r, originalIdx }))
       .filter(({ r }) => Boolean(r));
 
     valid.sort((a, b) => {
-      const ta = Number(a.r.timestamp) || 0;
-      const tb = Number(b.r.timestamp) || 0;
+      const ta = Number(b.r.timestamp) || 0;
+      const tb = Number(a.r.timestamp) || 0;
       if (ta !== tb) return ta - tb;
-      const da = a.r.date ? new Date(a.r.date).getTime() : 0;
-      const db = b.r.date ? new Date(b.r.date).getTime() : 0;
+      const da = b.r.date ? new Date(b.r.date).getTime() : 0;
+      const db = a.r.date ? new Date(a.r.date).getTime() : 0;
       if (!isNaN(da) && !isNaN(db) && da !== db) return da - db;
-      return a.originalIdx - b.originalIdx;
+      return b.originalIdx - a.originalIdx;
     });
 
-    const total = valid.length;
-    return valid
-      .map(({ r }, idx) => {
-        const companyObj = findCompanyForRecord(companies, r.companyId);
-        const serviceObj = services.find(s => String(s.id) === String(r.serviceId));
-        return {
-          ...r,
-          seqNo: idx + 1,
-          isLatest: idx === total - 1,
-          companyObj,
-          companyCode: companyObj?.code || '',
-          companyName: companyObj?.name || 'ไม่ระบุบริษัท',
-          serviceName: serviceObj?.name || 'ไม่ระบุบริการ',
-        };
-      })
-      .reverse();
+    const totalValid = valid.length;
+    return valid.slice(0, 10).map(({ r }, idx) => {
+      const companyObj = findCompanyForRecord(companies, r.companyId);
+      const serviceObj = services.find(s => String(s.id) === String(r.serviceId));
+      return {
+        ...r,
+        rank: idx + 1,
+        isLatest: idx === 0,
+        seqNo: totalValid - idx,
+        companyObj,
+        companyCode: companyObj?.code || '',
+        companyName: companyObj?.name || 'ไม่ระบุบริษัท',
+        serviceName: serviceObj?.name || 'ไม่ระบุบริการ',
+      };
+    });
   }, [records, companies, services]);
-
-  const sequentialKeyHistory = useMemo(() => {
-    let list = chronologicalKeyHistory;
-    if (keyHistoryScope === 'company') {
-      list = list.filter(item =>
-        currentCompanyObj
-          ? companyMatchesRecordId(currentCompanyObj, item.companyId)
-          : String(item.companyId) === String(selectedCompany)
-      );
-    }
-    const q = keyHistorySearch.trim().toLowerCase();
-    if (q) {
-      list = list.filter(item =>
-        item.companyName.toLowerCase().includes(q) ||
-        item.companyCode.toLowerCase().includes(q) ||
-        item.serviceName.toLowerCase().includes(q) ||
-        String(item.amount ?? '').includes(q) ||
-        String(item.date || '').includes(q) ||
-        safeFormat(item.date, 'dd/MM/yyyy', { locale: th }).toLowerCase().includes(q)
-      );
-    }
-    return list;
-  }, [chronologicalKeyHistory, keyHistoryScope, currentCompanyObj, selectedCompany, keyHistorySearch]);
 
   const handleJumpToRecord = (item) => {
     if (!item) return;
@@ -2331,62 +2304,26 @@ const DataEntry = ({ setView }) => {
             )}
           </div>
 
-          {/* Sequential Keying History & Data Management Card */}
+          {/* Rolling 10 Recent Entries Card for Quick Company & Date Re-Check */}
           <div className="glass-card seq-history-card">
             <div className="flex-between mb-3 flex-wrap gap-2">
               <div>
-                <h2 style={{ margin: 0, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '7px' }}>
+                <h2 style={{ margin: 0, fontSize: '1.08rem', display: 'flex', alignItems: 'center', gap: '7px' }}>
                   <Clock size={18} color="#2563eb" />
-                  <span>ประวัติการคีย์ตามลำดับ (กดเพื่อจัดการข้อมูล)</span>
+                  <span>10 รายการที่คีย์ล่าสุด (รีเช็ค บ. / วันที่)</span>
                 </h2>
-                <small className="text-muted">เรียงจากรายการที่คีย์ล่าสุด ลงไปหาเก่าสุด พร้อมระบบกู้คืนและแก้ไขทันที</small>
+                <small className="text-muted">เก็บวน 10 รายการล่าสุดอัตโนมัติ — คลิกที่รายการเพื่อสลับไปดู หรือกดย้าย บ./วันที่ ได้ทันที</small>
               </div>
-            </div>
-
-            {/* Data Safety Status Bar */}
-            <div className="seq-history-safety-bar">
-              <div className="seq-safety-info">
-                <ShieldCheck size={17} color="#059669" style={{ flexShrink: 0 }} />
-                <div>
-                  <div style={{ fontWeight: 700, color: '#065f46', fontSize: '0.82rem' }}>
-                    บันทึกปลอดภัยอัตโนมัติ (เซฟคู่ IndexedDB + LocalStorage)
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: '#047857' }}>
-                    รวมทั้งหมด {(records || []).length.toLocaleString()} รายการ
-                    {lastSavedAt ? ` • บันทึกล่าสุดเวลา ${lastSavedAt}` : ''}
-                  </div>
-                </div>
-              </div>
-              <div className="seq-safety-actions">
+              {deletedRecords && deletedRecords.length > 0 && (
                 <button
                   type="button"
-                  className="seq-mini-btn safe"
-                  onClick={exportData}
-                  title="ดาวน์โหลดไฟล์สำรองข้อมูล (.json) ลงเครื่องทันที"
+                  className={`seq-mini-btn warn ${showTrashList ? 'active' : ''}`}
+                  onClick={() => setShowTrashList(prev => !prev)}
+                  title="ดูรายการที่เพิ่งลบเพื่อกู้คืน"
                 >
-                  <Download size={13} /> สำรองไฟล์ด่วน
+                  <RotateCcw size={13} /> กู้คืนที่เพิ่งลบ ({deletedRecords.length})
                 </button>
-                {deletedRecords && deletedRecords.length > 0 && (
-                  <button
-                    type="button"
-                    className={`seq-mini-btn warn ${showTrashList ? 'active' : ''}`}
-                    onClick={() => setShowTrashList(prev => !prev)}
-                    title="ดูรายการที่เพิ่งลบเพื่อกู้คืน"
-                  >
-                    <RotateCcw size={13} /> กู้คืนที่ลบ ({deletedRecords.length})
-                  </button>
-                )}
-                {setView && (
-                  <button
-                    type="button"
-                    className="seq-mini-btn"
-                    onClick={() => setView('history')}
-                    title="เปิดดูตารางประวัติทั้งหมด"
-                  >
-                    <FileText size={13} /> ประวัติทั้งหมด
-                  </button>
-                )}
-              </div>
+              )}
             </div>
 
             {/* Undo / Trash Recovery Drawer */}
@@ -2438,173 +2375,116 @@ const DataEntry = ({ setView }) => {
               </div>
             )}
 
-            {/* Scope Filter & Search Bar */}
-            <div className="seq-history-toolbar">
-              <div className="seq-scope-tabs">
-                <button
-                  type="button"
-                  className={`seq-scope-btn ${keyHistoryScope === 'all' ? 'active' : ''}`}
-                  onClick={() => {
-                    setKeyHistoryScope('all');
-                    setKeyHistoryLimit(10);
-                  }}
-                >
-                  ทุกบริษัทตามลำดับคีย์ ({chronologicalKeyHistory.length})
-                </button>
-                <button
-                  type="button"
-                  className={`seq-scope-btn ${keyHistoryScope === 'company' ? 'active' : ''}`}
-                  onClick={() => {
-                    setKeyHistoryScope('company');
-                    setKeyHistoryLimit(10);
-                  }}
-                >
-                  เฉพาะบริษัทนี้
-                </button>
-              </div>
-              <div className="seq-search-wrap">
-                <Search size={14} className="seq-search-icon" />
-                <input
-                  type="text"
-                  className="seq-search-input"
-                  value={keyHistorySearch}
-                  onChange={e => setKeyHistorySearch(e.target.value)}
-                  placeholder="ค้นหาบริษัท / บริการ / ยอดเงิน / วันที่..."
-                />
-                {keyHistorySearch && (
-                  <button
-                    type="button"
-                    className="seq-search-clear"
-                    onClick={() => setKeyHistorySearch('')}
-                    title="ล้างคำค้นหา"
-                  >
-                    <X size={13} />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Chronological Keying Sequence List */}
-            {sequentialKeyHistory.length === 0 ? (
+            {/* Rolling 10 Keying Sequence List */}
+            {recentKeyedRecords.length === 0 ? (
               <p className="text-muted" style={{ fontSize: '0.85rem', margin: '0.75rem 0', textAlign: 'center' }}>
-                ไม่พบประวัติการคีย์ตามเงื่อนไขที่เลือก
+                ยังไม่มีประวัติการคีย์รายการ
               </p>
             ) : (
-              <>
-                <div className="seq-history-list">
-                  {sequentialKeyHistory.slice(0, keyHistoryLimit).map((item, idx) => {
-                    const isCurrentView =
-                      item.date === selectedDay &&
-                      (item.companyObj
-                        ? String(item.companyObj.id) === String(selectedCompany)
-                        : String(item.companyId) === String(selectedCompany));
-                    const hasValidClock = item.timestamp && Number(item.timestamp) > 1700000000000;
-                    const itemKey = `${item.seqNo}_${item.timestamp || idx}_${item.date}_${item.serviceId}`;
+              <div className="seq-history-list" style={{ maxHeight: '360px', overflowY: 'auto' }}>
+                {recentKeyedRecords.map((item, idx) => {
+                  const isCurrentView =
+                    item.date === selectedDay &&
+                    (item.companyObj
+                      ? String(item.companyObj.id) === String(selectedCompany)
+                      : String(item.companyId) === String(selectedCompany));
+                  const hasValidClock = item.timestamp && Number(item.timestamp) > 1700000000000;
+                  const itemKey = `${item.rank}_${item.timestamp || idx}_${item.date}_${item.serviceId}`;
 
-                    return (
-                      <div
-                        key={itemKey}
-                        className={`seq-history-item ${isCurrentView ? 'current-active' : ''}`}
-                        onClick={() => handleJumpToRecord(item)}
-                        title="คลิกเพื่อสลับหน้าไปจัดการบริษัทและวันที่ของรายการนี้ทันที"
-                      >
-                        <div className="seq-item-top">
-                          <div className="seq-item-badges">
-                            <span className={`seq-badge ${item.isLatest ? 'latest' : ''}`}>
-                              #{item.seqNo}{item.isLatest ? ' ล่าสุด' : ''}
-                            </span>
-                            {hasValidClock && (
-                              <span className="seq-time-pill">
-                                🕒 {safeFormat(new Date(Number(item.timestamp)), 'dd/MM HH:mm', { locale: th })}
-                              </span>
-                            )}
-                            <span className="seq-date-pill">
-                              📅 {safeFormat(item.date, 'dd/MM/yy', { locale: th })}
-                            </span>
-                            {isCurrentView && (
-                              <span className="seq-active-pill">กำลังเปิดอยู่</span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="seq-item-company">
-                          {item.companyCode && <span className="seq-comp-code">{item.companyCode}</span>}
-                          <span className="seq-comp-name">{item.companyName}</span>
-                        </div>
-
-                        <div className="seq-item-detail">
-                          <span className="seq-service-name">{item.serviceName}</span>
-                          <span className="seq-amount-text">
-                            {Number(item.count || 0).toLocaleString()} ชิ้น | <strong>฿{Number(item.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong>
+                  return (
+                    <div
+                      key={itemKey}
+                      className={`seq-history-item ${isCurrentView ? 'current-active' : ''}`}
+                      onClick={() => handleJumpToRecord(item)}
+                      title="คลิกเพื่อสลับหน้าไปจัดการบริษัทและวันที่ของรายการนี้ทันที"
+                    >
+                      <div className="seq-item-top">
+                        <div className="seq-item-badges">
+                          <span className={`seq-badge ${item.isLatest ? 'latest' : ''}`}>
+                            {item.isLatest ? 'ล่าสุด #1' : `#${item.rank}`}
                           </span>
-                        </div>
-
-                        {(item.machineRemaining != null || item.machineAccumulated != null || item.topUpAmount > 0) && (
-                          <div className="seq-meter-pills">
-                            {item.machineRemaining != null && (
-                              <span>บน: {Number(item.machineRemaining).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                            )}
-                            {item.machineAccumulated != null && (
-                              <span>ล่าง: {Number(item.machineAccumulated).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                            )}
-                            {item.topUpAmount > 0 && (
-                              <span className="topup">เติม: +฿{Number(item.topUpAmount).toLocaleString()}</span>
-                            )}
-                          </div>
-                        )}
-
-                        <div className="seq-item-actions" onClick={e => e.stopPropagation()}>
-                          <button
-                            type="button"
-                            className="seq-action-btn jump"
-                            onClick={() => handleJumpToRecord(item)}
-                            title="เปิดบริษัทและวันที่นี้ในหน้าบันทึกข้อมูล"
-                          >
-                            ไปจัดการ
-                          </button>
-                          <button
-                            type="button"
-                            className="seq-action-btn edit"
-                            onClick={() => handleOpenQuickEdit(item)}
-                            title="แก้ไขรายการนี้ทันที"
-                          >
-                            <Edit2 size={12} /> แก้ไข
-                          </button>
-                          <button
-                            type="button"
-                            className="seq-action-btn move"
-                            onClick={() => handleOpenReassignModal(item)}
-                            title="ย้ายไปบริษัทอื่นหรือวันที่อื่น"
-                          >
-                            <ArrowRightLeft size={12} /> ย้าย
-                          </button>
-                          <button
-                            type="button"
-                            className="seq-action-btn del"
-                            onClick={() => {
-                              if (window.confirm(`คุณต้องการลบรายการ "${item.serviceName}" (${item.companyName} วันที่ ${safeFormat(item.date, 'dd/MM/yyyy', { locale: th })}) ใช่หรือไม่?\n(สามารถกดกู้คืนจากถังขยะได้ภายหลัง)`)) {
-                                deleteSingleRecord(item.serviceId, item.date, item.companyId, item.timestamp);
-                              }
-                            }}
-                            title="ลบรายการนี้ (ย้ายลงถังขยะกู้คืนได้)"
-                          >
-                            <Trash2 size={12} />
-                          </button>
+                          {hasValidClock && (
+                            <span className="seq-time-pill">
+                              🕒 {safeFormat(new Date(Number(item.timestamp)), 'HH:mm', { locale: th })}
+                            </span>
+                          )}
+                          <span className="seq-date-pill">
+                            📅 {safeFormat(item.date, 'dd/MM/yy', { locale: th })}
+                          </span>
+                          {isCurrentView && (
+                            <span className="seq-active-pill">กำลังเปิดอยู่</span>
+                          )}
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-                {sequentialKeyHistory.length > keyHistoryLimit && (
-                  <button
-                    type="button"
-                    className="seq-load-more-btn"
-                    onClick={() => setKeyHistoryLimit(prev => prev + 20)}
-                  >
-                    แสดงเพิ่มอีก 20 รายการ (เหลืออีก {(sequentialKeyHistory.length - keyHistoryLimit).toLocaleString()} รายการ)
-                  </button>
-                )}
-              </>
+
+                      <div className="seq-item-company">
+                        {item.companyCode && <span className="seq-comp-code">{item.companyCode}</span>}
+                        <span className="seq-comp-name">{item.companyName}</span>
+                      </div>
+
+                      <div className="seq-item-detail">
+                        <span className="seq-service-name">{item.serviceName}</span>
+                        <span className="seq-amount-text">
+                          {Number(item.count || 0).toLocaleString()} ชิ้น | <strong>฿{Number(item.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong>
+                        </span>
+                      </div>
+
+                      {(item.machineRemaining != null || item.machineAccumulated != null || item.topUpAmount > 0) && (
+                        <div className="seq-meter-pills">
+                          {item.machineRemaining != null && (
+                            <span>บน: {Number(item.machineRemaining).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                          )}
+                          {item.machineAccumulated != null && (
+                            <span>ล่าง: {Number(item.machineAccumulated).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                          )}
+                          {item.topUpAmount > 0 && (
+                            <span className="topup">เติม: +฿{Number(item.topUpAmount).toLocaleString()}</span>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="seq-item-actions" onClick={e => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          className="seq-action-btn move"
+                          onClick={() => handleOpenReassignModal(item)}
+                          title="ย้ายไปบริษัทอื่นหรือวันที่อื่น"
+                        >
+                          <ArrowRightLeft size={12} /> ย้าย บ./วัน
+                        </button>
+                        <button
+                          type="button"
+                          className="seq-action-btn edit"
+                          onClick={() => handleOpenQuickEdit(item)}
+                          title="แก้ไขรายการนี้ทันที"
+                        >
+                          <Edit2 size={12} /> แก้ไข
+                        </button>
+                        <button
+                          type="button"
+                          className="seq-action-btn jump"
+                          onClick={() => handleJumpToRecord(item)}
+                          title="เปิดบริษัทและวันที่นี้ในหน้าบันทึกข้อมูล"
+                        >
+                          ไปหน้านี้
+                        </button>
+                        <button
+                          type="button"
+                          className="seq-action-btn del"
+                          onClick={() => {
+                            if (window.confirm(`คุณต้องการลบรายการ "${item.serviceName}" (${item.companyName} วันที่ ${safeFormat(item.date, 'dd/MM/yyyy', { locale: th })}) ใช่หรือไม่?\n(สามารถกดกู้คืนจากถังขยะได้ภายหลัง)`)) {
+                              deleteSingleRecord(item.serviceId, item.date, item.companyId, item.timestamp);
+                            }
+                          }}
+                          title="ลบรายการนี้ (ย้ายลงถังขยะกู้คืนได้)"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
 
@@ -4743,7 +4623,7 @@ const Navigation = ({ view, setView }) => {
         </div>
 
         <div className="nav-footer" style={{ padding: '0.6rem 1rem', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-          Version 1.5.5
+          Version 1.5.6
         </div>
       </div>
     </nav>
@@ -5053,7 +4933,7 @@ const AppContent = () => {
         )}
 
         {view === 'dashboard' && <Dashboard setView={setView} />}
-        {view === 'entry' && <DataEntry setView={setView} />}
+        {view === 'entry' && <DataEntry />}
         {view === 'settings' && (
           <div className="fade-in">
             <h1 style={{ marginBottom: '2rem' }}>การตั้งค่า</h1>

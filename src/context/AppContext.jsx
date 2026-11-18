@@ -433,24 +433,12 @@ export const AppProvider = ({ children }) => {
     if (!isStorageLoaded) return;
     try {
       localStorage.setItem('postage_records', JSON.stringify(records));
-      localStorage.setItem('postage_records_backup_latest', JSON.stringify({
-        savedAt: new Date().toISOString(),
-        count: records.length,
-        records
-      }));
     } catch (e) {
       console.warn('localStorage mirror warning (quota/privacy mode):', e);
     }
     set('postage_records', records).catch(e => {
       console.error('Failed to save records to IndexedDB:', e);
       alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง');
-    });
-    set('postage_records_backup_latest', {
-      savedAt: new Date().toISOString(),
-      count: records.length,
-      records
-    }).catch(e => {
-      console.error('Failed to save backup records to IndexedDB:', e);
     });
     try {
       const nowStr = format(new Date(), 'HH:mm:ss');
@@ -519,7 +507,7 @@ export const AppProvider = ({ children }) => {
       trashId: `${now}_${idx}_${Math.random().toString(36).slice(2, 7)}`
     }));
     setDeletedRecords(prev => {
-      const next = [...trashEntries, ...(Array.isArray(prev) ? prev : [])].slice(0, 50);
+      const next = [...trashEntries, ...(Array.isArray(prev) ? prev : [])].slice(0, 10);
       try {
         localStorage.setItem('postage_deleted_records', JSON.stringify(next));
       } catch (e) {}
